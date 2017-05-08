@@ -40,8 +40,7 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 	private DefaultTableModel modelWord;
 	public DateFormat df = new SimpleDateFormat("dd/MM/yyyy");
 	private BufferedWriter out;
-	private File wordFile = new File("words.txt"), statFile = new File(
-			"stats.txt");
+	private File wordFile = new File("words.txt"), statFile = new File("stats.txt");
 	private int readFileIndex = 0, noOfWords = 0, wordsToBeRevised = 0, wordsToBeRevised2 = 0, rwlindex = 0, wordListIndex = 0;
 	private Object value, valueMeaning;
 	private JTable wordTable;
@@ -422,7 +421,13 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 				}
 			}
 		} else if (e.getSource() == btnDeleteWord) {
+			Object[] deleteOptions = {"Delete Meaning", "Delete Word"};
+			/*int option = JOptionPane.showOptionDialog(null, "Delete meaning or word?", 
+					"Vocabulary Builder",
+					JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, 
+					null, deleteOptions, null);*/
 			readFileIndex = wordTable.getSelectedRow();
+			System.out.println(readFileIndex);
 			File temp = null;
 			try {
 				temp = File.createTempFile("file", ".txt",
@@ -430,42 +435,50 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 			} catch (IOException e1) {
 				e1.printStackTrace();
 			}
-
-			if (readFileIndex >= 0) {
-				// remove the word from table
-				for (int i = readFileIndex; i < noOfWords; i++) {
-					modelWord.setValueAt(modelWord.getValueAt(i + 1, 0), i, 0);
-					modelWord.setValueAt(modelWord.getValueAt(i + 1, 1), i, 1);
-					modelWord.setValueAt(modelWord.getValueAt(i + 1, 2), i, 2);
-					modelWord.setValueAt(modelWord.getValueAt(i + 1, 3), i, 3);
-					modelWord.setValueAt(modelWord.getValueAt(i + 1, 4), i, 4);
+			if (true) { // delete word
+				while (modelWord.getValueAt(readFileIndex, 0) == null) { // find row that has word
+					readFileIndex--;
 				}
-				// remove the word from file
-				String line = "null";
-				try {
-					int i = 0;
-					BufferedReader in = new BufferedReader(new FileReader(
-							wordFile));
-					BufferedWriter out = new BufferedWriter(
-							new FileWriter(temp));
-					while (line != null) {
-						line = in.readLine();
-						if (readFileIndex != i) {
-							if (line != null) {
-								out.write(line);
-								out.newLine();
-							}
-						}
-						i++;
+				int nextWordnewIndex = readFileIndex;
+				while (modelWord.getValueAt(readFileIndex + 1, 0) == null) {
+					
+				}
+				if (readFileIndex >= 0) {
+					// remove the word from table
+					for (int i = readFileIndex; i < noOfWords; i++) {
+						modelWord.setValueAt(modelWord.getValueAt(i + 1, 0), i, 0);
+						modelWord.setValueAt(modelWord.getValueAt(i + 1, 1), i, 1);
+						modelWord.setValueAt(modelWord.getValueAt(i + 1, 2), i, 2);
+						modelWord.setValueAt(modelWord.getValueAt(i + 1, 3), i, 3);
+						modelWord.setValueAt(modelWord.getValueAt(i + 1, 4), i, 4);
 					}
-					in.close();
-					out.close();
-				} catch (IOException f) {
-					System.err.println("IOException: " + f.getMessage());
+					// remove the word from file
+					String line = "null";
+					try {
+						int i = 0;
+						BufferedReader in = new BufferedReader(new FileReader(
+								wordFile));
+						BufferedWriter out = new BufferedWriter(
+								new FileWriter(temp));
+						while (line != null) {
+							line = in.readLine();
+							if (readFileIndex != i) {
+								if (line != null) {
+									out.write(line);
+									out.newLine();
+								}
+							}
+							i++;
+						}
+						in.close();
+						out.close();
+					} catch (IOException f) {
+						System.err.println("IOException: " + f.getMessage());
+					}
+					wordFile.delete();
+					temp.renameTo(wordFile);
+					noOfWords--;
 				}
-				wordFile.delete();
-				temp.renameTo(wordFile);
-				noOfWords--;
 			}
 
 		} else if (e.getSource() == btnSearch) {

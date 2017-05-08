@@ -24,6 +24,7 @@ public class Word {
 		p = phonetic;
 		meaning = new String[5];
 		meaning = m;
+		noOfMeanings = m.length;
 		dateAdded = da;
 		rev = revi;
 		dateCompleted = dc;
