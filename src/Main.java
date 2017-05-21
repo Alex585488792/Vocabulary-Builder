@@ -44,6 +44,8 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 	private JScrollPane meaningTAScroll;
 	private ArrayList<Word> wordList = new ArrayList<Word>(), reviseWordList = new ArrayList<Word>();
 	private int[] noOfWordsInLevel = new int[6];
+	String fieldDelimit = "|";
+	String meanDelimit = "^";
 
 	public static void main(String[] args) {
 		new Main();
@@ -62,7 +64,7 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 
 		// word panel JComponents
 		// JTable
-		String[] wordColumnTitle = { "Word", "<html>Phonetic<br> Symbol", "Meaning", "<html>Level of <br>completion",
+		String[] wordColumnTitle = { "ID", "Word", "<html>Phonetic<br> Symbol", "Meaning", "<html>Level of <br>completion",
 				"Date Added" };
 		modelWord = new DefaultTableModel(1000, wordColumnTitle.length);
 		modelWord.setColumnIdentifiers(wordColumnTitle);
@@ -73,11 +75,12 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 				return false;
 			};
 		};
-		wordTable.getColumnModel().getColumn(0).setMinWidth(100);
+		wordTable.getColumnModel().getColumn(0).setMinWidth(50);
 		wordTable.getColumnModel().getColumn(1).setMinWidth(100);
-		wordTable.getColumnModel().getColumn(2).setMinWidth(400);
-		wordTable.getColumnModel().getColumn(3).setMinWidth(100);
+		wordTable.getColumnModel().getColumn(2).setMinWidth(100);
+		wordTable.getColumnModel().getColumn(3).setMinWidth(400);
 		wordTable.getColumnModel().getColumn(4).setMinWidth(100);
+		wordTable.getColumnModel().getColumn(5).setMinWidth(100);
 		wordTable.setPreferredScrollableViewportSize(new Dimension(800, 600));
 		wordTable.setFillsViewportHeight(true);
 		wordTable.setPreferredSize(null);
@@ -170,8 +173,8 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 		btnDontRemember.addActionListener(this);
 		// may need fixing here
 		if (reviseWordList != null) {
-			wordReview.setText(reviseWordList.get(0).name);
-			answerTA.setText(reviseWordList.get(0).meaning[0]);
+			wordReview.setText(reviseWordList.get(0).getName());
+			answerTA.setText(reviseWordList.get(0).getMeaning(0));
 		}
 
 		wordPanel.add(btnAddWord);
@@ -209,6 +212,78 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 	}
 
 	public void actionPerformed(ActionEvent e) {
+		if (e.getSource() == btnAddWord) {
+			wordTF.setEnabled(true);
+			wordTF.setText("");
+			phoneticSymTF.setText("");
+			meaningTA.setText("");
+			Border border = BorderFactory.createLineBorder(Color.BLACK);
+			meaningTA.setBorder(BorderFactory.createCompoundBorder(border,
+					BorderFactory.createEmptyBorder(10, 10, 10, 10)));
+			Object[] addingWords = { "Word:", wordTF, "Phonetic symbol",
+					phoneticSymTF, "Meaning:", meaningTAScroll };
+			int option = JOptionPane.showConfirmDialog(null, addingWords,
+					"Add a word", JOptionPane.OK_CANCEL_OPTION);
+			String strWord = wordTF.getText();
+			String phoneticSymbol = phoneticSymTF.getText();
+			String [] meaning = meaningTA.getText().split("\n");
+			if (option == 0) {
+				if (strWord.length() == 0 || meaning.length == 0) {
+					JOptionPane.showMessageDialog(null,
+							"You did not input word/meaning!",
+							"Vocabulary Builder",
+							JOptionPane.INFORMATION_MESSAGE);
+				}
+				else {
+					Word newWord = new Word(strWord, phoneticSymbol, meaning, 
+							0, df.format(new Date()), null, false);
+					wordList.add(newWord);
+					wordArrayToTable(wordList);
+					wordArrayToFile(wordList);
+				}
+			}
+		}
+		else if (e.getSource() == btnEditWord) {
+			readFileIndex = wordTable.getSelectedRow();
+			if (readFileIndex >= 0) {
+				String [] arrId = String.valueOf(modelWord.getValueAt(readFileIndex, 0)).split("\\" + fieldDelimit);
+				int wordId = Integer.parseInt(arrId[0]);
+				int meaningId = Integer.parseInt(arrId[1]);
+				String oldMeaning = wordList.get(wordId).getMeaning(meaningId);
+				wordTF.setEnabled(true);
+				wordTF.setText(wordList.get(wordId).getName());
+				if (modelWord.getValueAt(readFileIndex, 1) != null) {
+					phoneticSymTF.setText(wordList.get(wordId).getPhonetic());
+				} else {
+					phoneticSymTF.setText("");
+				}
+				meaningTA.setText(oldMeaning);
+				Border border = BorderFactory.createLineBorder(Color.BLACK);
+				meaningTA.setBorder(BorderFactory.createCompoundBorder(border,
+						BorderFactory.createEmptyBorder(10, 10, 10, 10)));
+				Object[] addingWords = { "Word:", wordTF, "Phonetic symbol",
+						phoneticSymTF, "Meaning:", meaningTA };
+				int option = JOptionPane.showConfirmDialog(null, addingWords,
+						"Edit a word", JOptionPane.OK_CANCEL_OPTION);
+				String newWord = wordTF.getText();
+				String newPhoneticSymbol = phoneticSymTF.getText();
+				String newMeaning = meaningTA.getText();
+				if (option == 0) {
+					if (newWord.length() == 0 || newMeaning.length() == 0) {
+						JOptionPane.showMessageDialog(null,
+								"You did not input word/meaning!",
+								"Vocabulary Builder",
+								JOptionPane.INFORMATION_MESSAGE);
+					} else {
+						wordList.get(wordId).setName(newWord);
+						wordList.get(wordId).setPhonetic(newPhoneticSymbol);
+						wordList.get(wordId).setMeaning(newMeaning, meaningId);
+						wordArrayToTable(wordList);
+						wordArrayToFile(wordList);
+					}
+				}
+			}
+		}
 	}
 
 	public void stateChanged(ChangeEvent arg0) {
@@ -230,16 +305,16 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 			try {
 				BufferedReader in = new BufferedReader(new FileReader(f));
 				String line;
-				String[] data, meanData;
+				String[] data, meaningData;
 				line = in.readLine();
 				while (line != null) {
 					data = line.split("\\|");
-					meanData = data[2].split("^");
-					Word wordFromFile = new Word(data[0], data[1], meanData, Integer.parseInt(data[3]), stringToDate(data[4]),
-							stringToDate(data[5]), Boolean.valueOf(data[6]));
-					noOfWordsInLevel[wordFromFile.lv]++;
+					meaningData = data[2].split("\\^");
+					Word wordFromFile = new Word(data[0], data[1], meaningData, Integer.parseInt(data[3]), data[4],
+							data[5], Boolean.valueOf(data[6]));
+					noOfWordsInLevel[wordFromFile.getLevel()]++;
 					wordList.add(wordFromFile);
-					if (wordFromFile.rev) {
+					if (wordFromFile.getRev()) {
 						reviseWordList.add(wordFromFile);
 					}
 					line = in.readLine();
@@ -259,17 +334,55 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 		int insertIndex = 0;
 		for (int i = 0; i < aw.size(); i++) {
 			Word word = aw.get(i);
-			modelWord.setValueAt(word.name, insertIndex, 0);
-			modelWord.setValueAt(word.phonetic, insertIndex, 1);
-			modelWord.setValueAt(word.lv, insertIndex, 3);
-			modelWord.setValueAt(word.dateAdded, insertIndex, 4);
-			insertIndex++;
+			modelWord.setValueAt(word.getName(), insertIndex, 1);
+			modelWord.setValueAt(word.getPhonetic(), insertIndex, 2);
+			modelWord.setValueAt(word.getLevel(), insertIndex, 4);
+			modelWord.setValueAt(word.getDateAdded(), insertIndex, 5);
+			for (int j = 0; j < word.getNumMeaning(); j++) {
+				modelWord.setValueAt(word.getMeaning(j), insertIndex, 3);
+				modelWord.setValueAt(i + "|" + j, insertIndex, 0);
+				insertIndex++;
+			}
+		}
+	}
+	
+	public void wordArrayToFile(ArrayList<Word> aw) {
+		if(wordFile.delete()) {
+			wordFile = new File("words.txt");
+		}
+		try {
+			out = new BufferedWriter(new FileWriter(wordFile, true));
+			for (int i = 0; i < aw.size(); i++) {
+				Word word = aw.get(i);
+				String meaningToFile = "";
+				for (int mi = 0; mi < word.getNumMeaning(); mi++) {
+					meaningToFile = meaningToFile.concat(word.getMeaning(mi));
+					if (mi != word.getNumMeaning() - 1) {
+						meaningToFile = meaningToFile.concat(meanDelimit);
+					}
+				}
+				out.write(word.getName() + fieldDelimit);
+				out.write(word.getPhonetic() + fieldDelimit);
+				out.write(meaningToFile + fieldDelimit);
+				out.write(word.getLevel() + fieldDelimit);
+				out.write(word.getDateAdded() + fieldDelimit);
+				out.write(word.getDateCompleted() + fieldDelimit);
+				out.write(String.valueOf(word.getRev()));
+				out.newLine();
+			}
+			out.close();
+		} catch (IOException f) {
+			JOptionPane.showMessageDialog(null, f.getMessage()
+					+ "!", "Error", JOptionPane.ERROR_MESSAGE);
 		}
 	}
 
 	public Date stringToDate(String s) {
 		try {
-			return df.parse(s);
+			System.out.println(s);
+			SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+			System.out.println(dateFormat.format(s));
+			return dateFormat.parse(s);
 		} catch (ParseException e) {
 			// TODO Auto-generated catch block
 			e.getMessage();
