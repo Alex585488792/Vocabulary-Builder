@@ -10,6 +10,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
+import javax.swing.table.TableModel;
 
 import java.io.*;
 import java.net.MalformedURLException;
@@ -64,8 +65,8 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 
 		// word panel JComponents
 		// JTable
-		String[] wordColumnTitle = { "ID", "Word", "<html>Phonetic<br> Symbol", "Meaning", "<html>Level of <br>completion",
-				"Date Added" };
+		String[] wordColumnTitle = { "ID", "Word", "<html>Phonetic<br> Symbol", "Meaning",
+				"<html>Level of <br>completion", "Date Added" };
 		modelWord = new DefaultTableModel(1000, wordColumnTitle.length);
 		modelWord.setColumnIdentifiers(wordColumnTitle);
 		wordTable = new JTable(modelWord) {
@@ -172,10 +173,10 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 		btnDontRemember.setEnabled(false);
 		btnDontRemember.addActionListener(this);
 		// may need fixing here
-		if (reviseWordList != null) {
-			wordReview.setText(reviseWordList.get(0).getName());
-			answerTA.setText(reviseWordList.get(0).getMeaning(0));
-		}
+		// if (reviseWordList != null) {
+		// wordReview.setText(reviseWordList.get(0).getName());
+		// answerTA.setText(reviseWordList.get(0).getMeaning(0));
+		// }
 
 		wordPanel.add(btnAddWord);
 		wordPanel.add(btnEditWord);
@@ -218,35 +219,29 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 			phoneticSymTF.setText("");
 			meaningTA.setText("");
 			Border border = BorderFactory.createLineBorder(Color.BLACK);
-			meaningTA.setBorder(BorderFactory.createCompoundBorder(border,
-					BorderFactory.createEmptyBorder(10, 10, 10, 10)));
-			Object[] addingWords = { "Word:", wordTF, "Phonetic symbol",
-					phoneticSymTF, "Meaning:", meaningTAScroll };
-			int option = JOptionPane.showConfirmDialog(null, addingWords,
-					"Add a word", JOptionPane.OK_CANCEL_OPTION);
+			meaningTA.setBorder(
+					BorderFactory.createCompoundBorder(border, BorderFactory.createEmptyBorder(10, 10, 10, 10)));
+			Object[] addingWords = { "Word:", wordTF, "Phonetic symbol", phoneticSymTF, "Meaning:", meaningTAScroll };
+			int option = JOptionPane.showConfirmDialog(null, addingWords, "Add a word", JOptionPane.OK_CANCEL_OPTION);
 			String strWord = wordTF.getText();
 			String phoneticSymbol = phoneticSymTF.getText();
-			String [] meaning = meaningTA.getText().split("\n");
+			String[] meaning = meaningTA.getText().split("\n");
+			ArrayList<String> meaningArrayList = new ArrayList<String>(Arrays.asList(meaningTA.getText().split("\n")));
 			if (option == 0) {
 				if (strWord.length() == 0 || meaning.length == 0) {
-					JOptionPane.showMessageDialog(null,
-							"You did not input word/meaning!",
-							"Vocabulary Builder",
+					JOptionPane.showMessageDialog(null, "You did not input word/meaning!", "Vocabulary Builder",
 							JOptionPane.INFORMATION_MESSAGE);
-				}
-				else {
-					Word newWord = new Word(strWord, phoneticSymbol, meaning, 
-							0, df.format(new Date()), null, false);
+				} else {
+					Word newWord = new Word(strWord, phoneticSymbol, meaningArrayList, 0, df.format(new Date()), null, false);
 					wordList.add(newWord);
 					wordArrayToTable(wordList);
 					wordArrayToFile(wordList);
 				}
 			}
-		}
-		else if (e.getSource() == btnEditWord) {
+		} else if (e.getSource() == btnEditWord) {
 			readFileIndex = wordTable.getSelectedRow();
 			if (readFileIndex >= 0) {
-				String [] arrId = String.valueOf(modelWord.getValueAt(readFileIndex, 0)).split("\\" + fieldDelimit);
+				String[] arrId = String.valueOf(modelWord.getValueAt(readFileIndex, 0)).split("\\" + fieldDelimit);
 				int wordId = Integer.parseInt(arrId[0]);
 				int meaningId = Integer.parseInt(arrId[1]);
 				String oldMeaning = wordList.get(wordId).getMeaning(meaningId);
@@ -259,20 +254,17 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 				}
 				meaningTA.setText(oldMeaning);
 				Border border = BorderFactory.createLineBorder(Color.BLACK);
-				meaningTA.setBorder(BorderFactory.createCompoundBorder(border,
-						BorderFactory.createEmptyBorder(10, 10, 10, 10)));
-				Object[] addingWords = { "Word:", wordTF, "Phonetic symbol",
-						phoneticSymTF, "Meaning:", meaningTA };
-				int option = JOptionPane.showConfirmDialog(null, addingWords,
-						"Edit a word", JOptionPane.OK_CANCEL_OPTION);
+				meaningTA.setBorder(
+						BorderFactory.createCompoundBorder(border, BorderFactory.createEmptyBorder(10, 10, 10, 10)));
+				Object[] addingWords = { "Word:", wordTF, "Phonetic symbol", phoneticSymTF, "Meaning:", meaningTA };
+				int option = JOptionPane.showConfirmDialog(null, addingWords, "Edit a word",
+						JOptionPane.OK_CANCEL_OPTION);
 				String newWord = wordTF.getText();
 				String newPhoneticSymbol = phoneticSymTF.getText();
 				String newMeaning = meaningTA.getText();
 				if (option == 0) {
 					if (newWord.length() == 0 || newMeaning.length() == 0) {
-						JOptionPane.showMessageDialog(null,
-								"You did not input word/meaning!",
-								"Vocabulary Builder",
+						JOptionPane.showMessageDialog(null, "You did not input word/meaning!", "Vocabulary Builder",
 								JOptionPane.INFORMATION_MESSAGE);
 					} else {
 						wordList.get(wordId).setName(newWord);
@@ -281,6 +273,27 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 						wordArrayToTable(wordList);
 						wordArrayToFile(wordList);
 					}
+				}
+			}
+		} else if (e.getSource() == btnDeleteWord) {
+			Object[] deleteOptions = { "Delete Meaning", "Delete Word" };
+			int option = JOptionPane.showOptionDialog(null, "Delete meaning or word?", 
+			"Vocabulary Builder",
+			JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, 
+			null, deleteOptions, null);
+			System.out.println(option);
+			readFileIndex = wordTable.getSelectedRow();
+			String[] arrId = String.valueOf(modelWord.getValueAt(readFileIndex, 0)).split("\\" + fieldDelimit);
+			int wordId = Integer.parseInt(arrId[0]);
+			if (readFileIndex >= 0) {
+				if (option == 1) { // delete word
+					wordList.remove(wordId);
+					clearTableModel(modelWord);
+					wordArrayToTable(wordList);
+					wordArrayToFile(wordList);
+				}
+				else if (option == 0) {
+					int meaningId = Integer.parseInt(arrId[0]);
 				}
 			}
 		}
@@ -305,11 +318,11 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 			try {
 				BufferedReader in = new BufferedReader(new FileReader(f));
 				String line;
-				String[] data, meaningData;
+				String[] data;
 				line = in.readLine();
 				while (line != null) {
 					data = line.split("\\|");
-					meaningData = data[2].split("\\^");
+					ArrayList<String> meaningData = new ArrayList<String>(Arrays.asList(data[2].split("\\^")));
 					Word wordFromFile = new Word(data[0], data[1], meaningData, Integer.parseInt(data[3]), data[4],
 							data[5], Boolean.valueOf(data[6]));
 					noOfWordsInLevel[wordFromFile.getLevel()]++;
@@ -345,9 +358,9 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 			}
 		}
 	}
-	
+
 	public void wordArrayToFile(ArrayList<Word> aw) {
-		if(wordFile.delete()) {
+		if (wordFile.delete()) {
 			wordFile = new File("words.txt");
 		}
 		try {
@@ -372,8 +385,7 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 			}
 			out.close();
 		} catch (IOException f) {
-			JOptionPane.showMessageDialog(null, f.getMessage()
-					+ "!", "Error", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(null, f.getMessage() + "!", "Error", JOptionPane.ERROR_MESSAGE);
 		}
 	}
 
@@ -388,6 +400,13 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 			e.getMessage();
 			return null;
 		}
+	}
 
+	public void clearTableModel(DefaultTableModel tm) {
+		for (int i = 0; i < tm.getRowCount(); i++) {
+			for (int j = 0; j < tm.getColumnCount(); j++) {
+				tm.setValueAt("", i, j);
+			}
+		}
 	}
 }

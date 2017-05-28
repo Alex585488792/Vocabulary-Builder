@@ -1,5 +1,6 @@
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -7,7 +8,7 @@ public class Word {
 	public DateFormat df = new SimpleDateFormat("dd/MM/yyyy");
 	private String name;
 	private String phonetic;
-	private String [] meaning;
+	private ArrayList<String> meaning;
 	private String dateAdded, dateCompleted;
 	private Boolean rev;
 	private int lv, noOfMeanings;
@@ -19,12 +20,11 @@ public class Word {
 //		lv = 0;
 //		rev = false;
 //	}
-	public Word(String n, String p, String[] m, int lvl,String da, String dc, Boolean revi) {
+	public Word(String n, String p, ArrayList<String> m, int lvl,String da, String dc, Boolean revi) {
 		name = n;
 		phonetic = p;
-		meaning = new String[5];
 		meaning = m;
-		noOfMeanings = m.length;
+		noOfMeanings = m.size();
 		dateAdded = da;
 		rev = revi;
 		dateCompleted = dc;
@@ -42,10 +42,10 @@ public class Word {
 		return this.phonetic;
 	}
 	public void setMeaning(String m, int i) {
-		this.meaning[i] = m;
+		this.meaning.set(i, m);
 	}
 	public String getMeaning(int i) {
-		return this.meaning[i];
+		return this.meaning.get(i);
 	}
 	public int getNumMeaning() {
 		return this.noOfMeanings;
