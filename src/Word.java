@@ -47,6 +47,16 @@ public class Word {
 	public String getMeaning(int i) {
 		return this.meaning.get(i);
 	}
+	public void addMeaning(String [] meaning) {
+		for (int i = 0; i < meaning.length; i++) {
+			this.meaning.add(meaning[i]);
+		}
+		this.noOfMeanings = this.meaning.size();
+	}
+	public void removeMeaning(int i) {
+		this.meaning.remove(i);
+		this.noOfMeanings--;
+	}
 	public int getNumMeaning() {
 		return this.noOfMeanings;
 	}

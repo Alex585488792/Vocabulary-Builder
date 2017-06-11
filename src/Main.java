@@ -13,8 +13,10 @@ import javax.swing.table.JTableHeader;
 import javax.swing.table.TableModel;
 
 import java.io.*;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -26,15 +28,18 @@ import java.text.SimpleDateFormat;
 import java.awt.event.*;
 import java.awt.*;
 
-public class Main extends JFrame implements ActionListener, ChangeListener {
+public class Main extends JFrame implements ActionListener, ChangeListener, KeyListener {
 	private static final long serialVersionUID = 1L;
+	private static final String fieldDelimit = "|";
+	private static final String meanDelimit = "^";
 	private JPanel wordPanel, statPanel, reviewPanel, dictPanel;
-	private JButton btnAddWord, btnEditWord, btnDeleteWord, btnSearch, btnAddtoList, btnReviewAnswer, btnRemember,
-			btnDontRemember;
+	private JButton btnAdd, btnEdit, btnDelete, btnSearch, btnAddtoList, btnReviewAnswer, btnRemember, btnDontRemember;
 	private DefaultTableModel modelWord;
-	public DateFormat df = new SimpleDateFormat("dd/MM/yyyy");
+	private DateFormat df = new SimpleDateFormat("dd/MM/yyyy");
 	private BufferedWriter out;
 	private File wordFile = new File("words.txt"), statFile = new File("stats.txt");
+	private String wordSearch;
+	private ArrayList<String> meaningSearch;
 	private int readFileIndex = 0, wordsToBeRevised = 0, wordsToBeRevised2 = 0, rwlindex = 0, wordListIndex = 0;
 	private Object value, valueMeaning;
 	private JTable wordTable;
@@ -45,8 +50,6 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 	private JScrollPane meaningTAScroll;
 	private ArrayList<Word> wordList = new ArrayList<Word>(), reviseWordList = new ArrayList<Word>();
 	private int[] noOfWordsInLevel = new int[6];
-	String fieldDelimit = "|";
-	String meanDelimit = "^";
 
 	public static void main(String[] args) {
 		new Main();
@@ -100,15 +103,15 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 		meaningTAScroll = new JScrollPane(meaningTA);
 		meaningTAScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
 
-		btnAddWord = new JButton("Add");
-		btnAddWord.setFocusable(false);
-		btnAddWord.addActionListener(this);
-		btnEditWord = new JButton("Edit");
-		btnEditWord.setFocusable(false);
-		btnEditWord.addActionListener(this);
-		btnDeleteWord = new JButton("Delete");
-		btnDeleteWord.setFocusable(false);
-		btnDeleteWord.addActionListener(this);
+		btnAdd = new JButton("Add");
+		btnAdd.setFocusable(false);
+		btnAdd.addActionListener(this);
+		btnEdit = new JButton("Edit");
+		btnEdit.setFocusable(false);
+		btnEdit.addActionListener(this);
+		btnDelete = new JButton("Delete");
+		btnDelete.setFocusable(false);
+		btnDelete.addActionListener(this);
 
 		// Statistics panel JComponents
 		JLabel statLabel = new JLabel("STATSTICS");
@@ -132,6 +135,9 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 		searchResultsTA.setFont(new Font("MS Song", Font.PLAIN, 24));
 		searchResultsTA.setPreferredSize(new Dimension(750, 500));
 		searchResultsTA.setMaximumSize(new Dimension(700, 500));
+		searchResultsTA.setLineWrap(true);
+		searchResultsTA.setWrapStyleWord(true);
+		searchResultsTA.setEditable(false);
 		btnSearch = new JButton("Search");
 		btnSearch.addActionListener(this);
 		btnAddtoList = new JButton("Add to list");
@@ -178,9 +184,9 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 		// answerTA.setText(reviseWordList.get(0).getMeaning(0));
 		// }
 
-		wordPanel.add(btnAddWord);
-		wordPanel.add(btnEditWord);
-		wordPanel.add(btnDeleteWord);
+		wordPanel.add(btnAdd);
+		wordPanel.add(btnEdit);
+		wordPanel.add(btnDelete);
 		wordPanel.add(new JScrollPane(wordTable, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
 				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER));
 		statPanel.add(statLabel);
@@ -199,10 +205,10 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 		reviewPanel.add(answerTA);
 		reviewPanel.add(btnRemember);
 		reviewPanel.add(btnDontRemember);
+		tabbedPane.addTab("Dictionary", dictPanel);
 		tabbedPane.addTab("Word", wordPanel);
 		tabbedPane.addTab("Review", reviewPanel);
 		tabbedPane.addTab("Stats", statPanel);
-		tabbedPane.addTab("Dictionary", dictPanel);
 
 		setTitle("Vocabulary Builder");
 		add(tabbedPane);
@@ -213,40 +219,82 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 	}
 
 	public void actionPerformed(ActionEvent e) {
-		if (e.getSource() == btnAddWord) {
-			wordTF.setEnabled(true);
-			wordTF.setText("");
-			phoneticSymTF.setText("");
-			meaningTA.setText("");
-			Border border = BorderFactory.createLineBorder(Color.BLACK);
-			meaningTA.setBorder(
-					BorderFactory.createCompoundBorder(border, BorderFactory.createEmptyBorder(10, 10, 10, 10)));
-			Object[] addingWords = { "Word:", wordTF, "Phonetic symbol", phoneticSymTF, "Meaning:", meaningTAScroll };
-			int option = JOptionPane.showConfirmDialog(null, addingWords, "Add a word", JOptionPane.OK_CANCEL_OPTION);
-			String strWord = wordTF.getText();
-			String phoneticSymbol = phoneticSymTF.getText();
-			String[] meaning = meaningTA.getText().split("\n");
-			ArrayList<String> meaningArrayList = new ArrayList<String>(Arrays.asList(meaningTA.getText().split("\n")));
-			if (option == 0) {
-				if (strWord.length() == 0 || meaning.length == 0) {
-					JOptionPane.showMessageDialog(null, "You did not input word/meaning!", "Vocabulary Builder",
-							JOptionPane.INFORMATION_MESSAGE);
-				} else {
-					Word newWord = new Word(strWord, phoneticSymbol, meaningArrayList, 0, df.format(new Date()), null, false);
-					wordList.add(newWord);
-					wordArrayToTable(wordList);
-					wordArrayToFile(wordList);
+		if (e.getSource() == btnAdd) {
+			readFileIndex = wordTable.getSelectedRow();
+			int optionWM = 1;
+			if (readFileIndex >= 0 && modelWord.getValueAt(readFileIndex, 0) != null) {
+				Object[] addOptions = { "Add Meaning", "Add Word" };
+				optionWM = JOptionPane.showOptionDialog(null, "Add meaning or word?", "Vocabulary Builder",
+						JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, addOptions, null);
+			}
+
+			if (optionWM == 0) { // add meaning
+				String[] arrId = String.valueOf(modelWord.getValueAt(readFileIndex, 0)).split("\\" + fieldDelimit);
+				int wordId = Integer.parseInt(arrId[0]);
+				wordTF.setEnabled(false);
+				wordTF.setText(wordList.get(wordId).getName());
+				phoneticSymTF.setEnabled(false);
+				phoneticSymTF.setText(wordList.get(wordId).getPhonetic());
+				meaningTA.setText("");
+				Border border = BorderFactory.createLineBorder(Color.BLACK);
+				meaningTA.setBorder(
+						BorderFactory.createCompoundBorder(border, BorderFactory.createEmptyBorder(10, 10, 10, 10)));
+				Object[] addingWords = { "Word:", wordTF, "Phonetic symbol", phoneticSymTF, "Meaning:",
+						meaningTAScroll };
+				int optionAdd = JOptionPane.showConfirmDialog(null, addingWords, "Add a word",
+						JOptionPane.OK_CANCEL_OPTION);
+				String[] meaning = meaningTA.getText().split("\n");
+				if (optionAdd == 0) {
+					if (meaning.length == 0) {
+						JOptionPane.showMessageDialog(null, "You did not input meaning!", "Vocabulary Builder",
+								JOptionPane.WARNING_MESSAGE);
+					} else {
+						wordList.get(wordId).addMeaning(meaning);
+						wordArrayToTable(wordList);
+						wordArrayToFile(wordList);
+					}
+				}
+			} else if (optionWM == 1) { // add word
+				wordTF.setEnabled(true);
+				wordTF.setText("");
+				phoneticSymTF.setText("");
+				meaningTA.setText("");
+				Border border = BorderFactory.createLineBorder(Color.BLACK);
+				meaningTA.setBorder(
+						BorderFactory.createCompoundBorder(border, BorderFactory.createEmptyBorder(10, 10, 10, 10)));
+				Object[] addingWords = { "Word:", wordTF, "Phonetic symbol", phoneticSymTF, "Meaning:",
+						meaningTAScroll };
+				int optionAdd = JOptionPane.showConfirmDialog(null, addingWords, "Add a word",
+						JOptionPane.OK_CANCEL_OPTION);
+				String strWord = wordTF.getText();
+				String phoneticSymbol = phoneticSymTF.getText();
+				String[] meaning = meaningTA.getText().split("\n");
+				ArrayList<String> meaningArrayList = new ArrayList<String>(
+						Arrays.asList(meaningTA.getText().split("\n")));
+				if (optionAdd == 0) {
+					if (strWord.length() == 0 || meaning.length == 0) {
+						JOptionPane.showMessageDialog(null, "You did not input word/meaning!", "Vocabulary Builder",
+								JOptionPane.WARNING_MESSAGE);
+					} else {
+						Word newWord = new Word(strWord, phoneticSymbol, meaningArrayList, 0, df.format(new Date()),
+								null, false);
+						wordList.add(newWord);
+						wordArrayToTable(wordList);
+						wordArrayToFile(wordList);
+					}
 				}
 			}
-		} else if (e.getSource() == btnEditWord) {
+
+		} else if (e.getSource() == btnEdit) {
 			readFileIndex = wordTable.getSelectedRow();
-			if (readFileIndex >= 0) {
+			if (readFileIndex >= 0 && modelWord.getValueAt(readFileIndex, 0) != null) {
 				String[] arrId = String.valueOf(modelWord.getValueAt(readFileIndex, 0)).split("\\" + fieldDelimit);
 				int wordId = Integer.parseInt(arrId[0]);
 				int meaningId = Integer.parseInt(arrId[1]);
 				String oldMeaning = wordList.get(wordId).getMeaning(meaningId);
 				wordTF.setEnabled(true);
 				wordTF.setText(wordList.get(wordId).getName());
+				phoneticSymTF.setEnabled(true);
 				if (modelWord.getValueAt(readFileIndex, 1) != null) {
 					phoneticSymTF.setText(wordList.get(wordId).getPhonetic());
 				} else {
@@ -256,7 +304,8 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 				Border border = BorderFactory.createLineBorder(Color.BLACK);
 				meaningTA.setBorder(
 						BorderFactory.createCompoundBorder(border, BorderFactory.createEmptyBorder(10, 10, 10, 10)));
-				Object[] addingWords = { "Word:", wordTF, "Phonetic symbol", phoneticSymTF, "Meaning:", meaningTA };
+				Object[] addingWords = { "Word:", wordTF, "Phonetic symbol", phoneticSymTF, "Meaning:",
+						meaningTAScroll };
 				int option = JOptionPane.showConfirmDialog(null, addingWords, "Edit a word",
 						JOptionPane.OK_CANCEL_OPTION);
 				String newWord = wordTF.getText();
@@ -266,6 +315,10 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 					if (newWord.length() == 0 || newMeaning.length() == 0) {
 						JOptionPane.showMessageDialog(null, "You did not input word/meaning!", "Vocabulary Builder",
 								JOptionPane.INFORMATION_MESSAGE);
+					} else if (newMeaning.indexOf("\n") != -1) {
+						JOptionPane.showMessageDialog(null,
+								"Please edit one meaning at a time (i.e. do not use 'enter'", "Vocabulary Builder",
+								JOptionPane.INFORMATION_MESSAGE);
 					} else {
 						wordList.get(wordId).setName(newWord);
 						wordList.get(wordId).setPhonetic(newPhoneticSymbol);
@@ -274,27 +327,60 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 						wordArrayToFile(wordList);
 					}
 				}
+			} else {
+				JOptionPane.showMessageDialog(null, "Please select a row to edit", "Vocabulary Builder",
+						JOptionPane.ERROR_MESSAGE);
 			}
-		} else if (e.getSource() == btnDeleteWord) {
-			Object[] deleteOptions = { "Delete Meaning", "Delete Word" };
-			int option = JOptionPane.showOptionDialog(null, "Delete meaning or word?", 
-			"Vocabulary Builder",
-			JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, 
-			null, deleteOptions, null);
-			System.out.println(option);
+		} else if (e.getSource() == btnDelete) {
 			readFileIndex = wordTable.getSelectedRow();
-			String[] arrId = String.valueOf(modelWord.getValueAt(readFileIndex, 0)).split("\\" + fieldDelimit);
-			int wordId = Integer.parseInt(arrId[0]);
-			if (readFileIndex >= 0) {
+			if (readFileIndex >= 0 && modelWord.getValueAt(readFileIndex, 0) != null) {
+				Object[] deleteOptions = { "Delete Meaning", "Delete Word" };
+				int option = JOptionPane.showOptionDialog(null, "Delete meaning or word?", "Vocabulary Builder",
+						JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, deleteOptions, null);
+				String[] arrId = String.valueOf(modelWord.getValueAt(readFileIndex, 0)).split("\\" + fieldDelimit);
+				int wordId = Integer.parseInt(arrId[0]);
+
 				if (option == 1) { // delete word
 					wordList.remove(wordId);
 					clearTableModel(modelWord);
 					wordArrayToTable(wordList);
 					wordArrayToFile(wordList);
+				} else if (option == 0) {
+					int meaningId = Integer.parseInt(arrId[1]);
+					wordList.get(wordId).removeMeaning(meaningId);
+					clearTableModel(modelWord);
+					wordArrayToTable(wordList);
+					wordArrayToFile(wordList);
 				}
-				else if (option == 0) {
-					int meaningId = Integer.parseInt(arrId[0]);
+			} else {
+				JOptionPane.showMessageDialog(null, "Please select a row to delete", "Vocabulary Builder",
+						JOptionPane.ERROR_MESSAGE);
+			}
+		} else if (e.getSource() == btnSearch) {
+			searchResultsTA.setText("");
+			meaningSearch = new ArrayList<String>();
+			btnAddtoList.setEnabled(true);
+			wordSearch = "";
+			wordSearch = wordSearchTF.getText();
+			meaningSearch = searchWord(wordSearch, "oxford");
+			if (meaningSearch != null) {
+				for (int i = 0; i < meaningSearch.size(); i++) {
+					searchResultsTA.append(i + 1 + ". " + meaningSearch.get(i) + "\n");
 				}
+			}
+		} else if (e.getSource() == btnAddtoList) {
+			if (searchResultsTA.getText().equals("") || wordSearch.length() == 0) {
+				JOptionPane.showMessageDialog(null, "Word cannot be added, since word/and or meaning is empty", "Vocabulary Builder",
+						JOptionPane.WARNING_MESSAGE);
+			} else {
+				Word newWord = new Word(wordSearch, "", meaningSearch, 0, df.format(new Date()), null,
+						false);
+				wordList.add(newWord);
+				wordArrayToTable(wordList);
+				wordArrayToFile(wordList);
+				JOptionPane.showMessageDialog(null, "Word successfully added to list!", "Vocabulary Builder",
+						JOptionPane.INFORMATION_MESSAGE);
+				btnAddtoList.setEnabled(false);
 			}
 		}
 	}
@@ -313,6 +399,20 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 		}
 	}
 
+	public void keyPressed(KeyEvent e) {
+		// press enter searches word
+	}
+
+	public void keyReleased(KeyEvent e) {
+		// TODO Auto-generated method stub
+
+	}
+
+	public void keyTyped(KeyEvent e) {
+		// TODO Auto-generated method stub
+
+	}
+
 	public void wordFileToArray(File f) {
 		if (f.exists()) {
 			try {
@@ -323,6 +423,9 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 				while (line != null) {
 					data = line.split("\\|");
 					ArrayList<String> meaningData = new ArrayList<String>(Arrays.asList(data[2].split("\\^")));
+					if (meaningData.size() == 1 && meaningData.get(0).length() == 0) { // no meanings
+						meaningData = new ArrayList<String>();
+					}
 					Word wordFromFile = new Word(data[0], data[1], meaningData, Integer.parseInt(data[3]), data[4],
 							data[5], Boolean.valueOf(data[6]));
 					noOfWordsInLevel[wordFromFile.getLevel()]++;
@@ -351,6 +454,7 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 			modelWord.setValueAt(word.getPhonetic(), insertIndex, 2);
 			modelWord.setValueAt(word.getLevel(), insertIndex, 4);
 			modelWord.setValueAt(word.getDateAdded(), insertIndex, 5);
+			System.out.println(word.getNumMeaning());
 			for (int j = 0; j < word.getNumMeaning(); j++) {
 				modelWord.setValueAt(word.getMeaning(j), insertIndex, 3);
 				modelWord.setValueAt(i + "|" + j, insertIndex, 0);
@@ -391,9 +495,9 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 
 	public Date stringToDate(String s) {
 		try {
-			System.out.println(s);
+			// System.out.println(s);
 			SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
-			System.out.println(dateFormat.format(s));
+			// System.out.println(dateFormat.format(s));
 			return dateFormat.parse(s);
 		} catch (ParseException e) {
 			// TODO Auto-generated catch block
@@ -407,6 +511,65 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 			for (int j = 0; j < tm.getColumnCount(); j++) {
 				tm.setValueAt("", i, j);
 			}
+		}
+	}
+
+	public ArrayList<String> searchWord(String word, String dict) {
+		try {
+			URL url;
+			if (dict.equals("oxford")) {
+				url = new URL("https://od-api.oxforddictionaries.com:443/api/v1/entries/en/" + word + "/definitions");
+			} else {
+				url = new URL("");
+			}
+
+			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+			conn.setRequestMethod("GET");
+			conn.setRequestProperty("Accept", "application/json");
+			conn.setRequestProperty("app_id", "7834b310");
+			conn.setRequestProperty("app_key", "82781012e44b2637051c49060569cce5");
+
+			if (conn.getResponseCode() != 200) {
+				throw new RuntimeException("Failed : HTTP error code : " + conn.getResponseCode());
+			}
+
+			BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
+			ArrayList<String> meanings = new ArrayList<String>();
+			boolean subsenses = false;
+			String output;
+			while ((output = br.readLine()) != null) {
+				String trimmed = output.trim();
+				if (trimmed.contains("subsenses")) {
+					subsenses = true;
+				} else if (trimmed.equals("]")) {
+					subsenses = false;
+				}
+				if (trimmed.contains("\"definitions\"") && !subsenses) {
+					meanings.add(br.readLine().trim().replaceAll("^\"|\"$", ""));
+				}
+				if (trimmed.contains("lexicalCategory")) {
+					String wordType = trimmed.replaceAll("\"lexicalCategory\": \"", "");
+					wordType = wordType.replaceAll("\"", "").replaceAll(",", "");
+				}
+			}
+			
+			conn.disconnect();
+			return meanings;
+
+		} catch (MalformedURLException e) {
+			JOptionPane.showMessageDialog(null, "URL Malformed", "Vocabulary Builder", JOptionPane.ERROR_MESSAGE);
+			return null;
+		} catch (UnknownHostException e) {
+			JOptionPane.showMessageDialog(null, "Cannot connect to the Internet", "Vocabulary Builder",
+					JOptionPane.ERROR_MESSAGE);
+			return null;
+		} catch (IOException e) {
+			JOptionPane.showMessageDialog(null, "Input/Output Error", "Vocabulary Builder", JOptionPane.ERROR_MESSAGE);
+			return null;
+		} catch (RuntimeException e) {
+			JOptionPane.showMessageDialog(null, "There are no results for " + word, "Vocabulary Builder",
+					JOptionPane.ERROR_MESSAGE);
+			return null;
 		}
 	}
 }
