@@ -25,6 +25,7 @@ import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.awt.event.*;
 import java.awt.*;
 
@@ -40,14 +41,14 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 	private File wordFile = new File("words.txt"), statFile = new File("stats.txt");
 	private String wordSearch;
 	private ArrayList<String> meaningSearch;
-	private int readFileIndex = 0, wordsToBeRevised = 0, wordsToBeRevised2 = 0, rwlindex = 0, wordListIndex = 0;
+	private int readFileIndex = 0, rwlindex = 0, wordListIndex = 0;
 	private Object value, valueMeaning;
 	private JTable wordTable;
 	private JTextField wordTF, phoneticSymTF, wordSearchTF;
 	private JTextArea meaningTA, searchResultsTA, answerTA, statTA;
 	private JLabel wordReview, lblNoOfWordsRemaining;
 	private JTabbedPane tabbedPane;
-	private JScrollPane meaningTAScroll;
+	private JScrollPane meaningTAScroll, answerTAScroll;
 	private ArrayList<Word> wordList = new ArrayList<Word>(), reviseWordList = new ArrayList<Word>();
 	private int[] noOfWordsInLevel = new int[6];
 
@@ -137,7 +138,7 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 		searchResultsTA.setMaximumSize(new Dimension(700, 500));
 		searchResultsTA.setLineWrap(true);
 		searchResultsTA.setWrapStyleWord(true);
-		searchResultsTA.setEditable(false);
+//		searchResultsTA.setEditable(false);
 		btnSearch = new JButton("Search");
 		btnSearch.addActionListener(this);
 		btnAddtoList = new JButton("Add to list");
@@ -160,12 +161,17 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 		btnReviewAnswer.setPreferredSize(new Dimension(800, 400));
 		btnReviewAnswer.setBounds(50, 180, 800, 400);
 		btnReviewAnswer.addActionListener(this);
-		if (wordsToBeRevised == 0) {
+		if (reviseWordList.size() == 0) {
 			btnReviewAnswer.setEnabled(false);
 		}
 		answerTA = new JTextArea();
-		answerTA.setBounds(50, 180, 800, 400);
 		answerTA.setFont(new Font("Arial", Font.PLAIN, 24));
+		answerTA.setWrapStyleWord(true);
+		answerTA.setLineWrap(true);
+		answerTA.setEditable(false);
+		answerTAScroll = new JScrollPane(answerTA);
+		answerTAScroll.setBounds(50, 180, 800, 400);
+		answerTAScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
 		btnRemember = new JButton("I Remember");
 		btnRemember.setBackground(Color.GREEN);
 		btnRemember.setFont(new Font("Arial", Font.PLAIN, 36));
@@ -179,10 +185,10 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 		btnDontRemember.setEnabled(false);
 		btnDontRemember.addActionListener(this);
 		// may need fixing here
-		// if (reviseWordList != null) {
-		// wordReview.setText(reviseWordList.get(0).getName());
-		// answerTA.setText(reviseWordList.get(0).getMeaning(0));
-		// }
+		if (reviseWordList.size() > 0) {
+			wordReview.setText(reviseWordList.get(1).getName());
+			answerTA.setText(reviseWordList.get(1).getMeaning());
+		 }
 
 		wordPanel.add(btnAdd);
 		wordPanel.add(btnEdit);
@@ -202,7 +208,7 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 		reviewPanel.add(lblNoOfWordsRemaining);
 		reviewPanel.add(wordReview);
 		reviewPanel.add(btnReviewAnswer);
-		reviewPanel.add(answerTA);
+		reviewPanel.add(answerTAScroll);
 		reviewPanel.add(btnRemember);
 		reviewPanel.add(btnDontRemember);
 		tabbedPane.addTab("Dictionary", dictPanel);
@@ -277,7 +283,7 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 								JOptionPane.WARNING_MESSAGE);
 					} else {
 						Word newWord = new Word(strWord, phoneticSymbol, meaningArrayList, 0, df.format(new Date()),
-								null, false);
+								null, LocalDate.now().plusDays(1));
 						wordList.add(newWord);
 						wordArrayToTable(wordList);
 						wordArrayToFile(wordList);
@@ -314,11 +320,11 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 				if (option == 0) {
 					if (newWord.length() == 0 || newMeaning.length() == 0) {
 						JOptionPane.showMessageDialog(null, "You did not input word/meaning!", "Vocabulary Builder",
-								JOptionPane.INFORMATION_MESSAGE);
+								JOptionPane.ERROR_MESSAGE);
 					} else if (newMeaning.indexOf("\n") != -1) {
 						JOptionPane.showMessageDialog(null,
 								"Please edit one meaning at a time (i.e. do not use 'enter'", "Vocabulary Builder",
-								JOptionPane.INFORMATION_MESSAGE);
+								JOptionPane.ERROR_MESSAGE);
 					} else {
 						wordList.get(wordId).setName(newWord);
 						wordList.get(wordId).setPhonetic(newPhoneticSymbol);
@@ -347,10 +353,15 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 					wordArrayToFile(wordList);
 				} else if (option == 0) {
 					int meaningId = Integer.parseInt(arrId[1]);
-					wordList.get(wordId).removeMeaning(meaningId);
-					clearTableModel(modelWord);
-					wordArrayToTable(wordList);
-					wordArrayToFile(wordList);
+					if (meaningId == 0 && wordList.get(wordId).getNumMeaning() == 1) {
+						JOptionPane.showMessageDialog(null, "Every word must have at least 1 meaning.",
+								"Vocabulary Builder", JOptionPane.ERROR_MESSAGE);
+					} else {
+						wordList.get(wordId).removeMeaning(meaningId);
+						clearTableModel(modelWord);
+						wordArrayToTable(wordList);
+						wordArrayToFile(wordList);
+					}
 				}
 			} else {
 				JOptionPane.showMessageDialog(null, "Please select a row to delete", "Vocabulary Builder",
@@ -370,15 +381,14 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 			}
 		} else if (e.getSource() == btnAddtoList) {
 			if (searchResultsTA.getText().equals("") || wordSearch.length() == 0) {
-				JOptionPane.showMessageDialog(null, "Word cannot be added, since word/and or meaning is empty", "Vocabulary Builder",
-						JOptionPane.WARNING_MESSAGE);
+				JOptionPane.showMessageDialog(null, "Word cannot be added, since word/and or meaning is empty",
+						"Vocabulary Builder", JOptionPane.WARNING_MESSAGE);
 			} else {
-				Word newWord = new Word(wordSearch, "", meaningSearch, 0, df.format(new Date()), null,
-						false);
+				Word newWord = new Word(wordSearch, "", meaningSearch, 0, df.format(new Date()), null, LocalDate.now().plusDays(1));
 				wordList.add(newWord);
 				wordArrayToTable(wordList);
 				wordArrayToFile(wordList);
-				JOptionPane.showMessageDialog(null, "Word successfully added to list!", "Vocabulary Builder",
+				JOptionPane.showMessageDialog(null, wordSearch + " successfully added to list!", "Vocabulary Builder",
 						JOptionPane.INFORMATION_MESSAGE);
 				btnAddtoList.setEnabled(false);
 			}
@@ -386,15 +396,15 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 	}
 
 	public void stateChanged(ChangeEvent arg0) {
-		if (tabbedPane.getTitleAt(tabbedPane.getSelectedIndex()).equals("Review") && wordsToBeRevised > 0) {
-			lblNoOfWordsRemaining.setText(String.valueOf(wordsToBeRevised));
-			if (wordsToBeRevised == 1) {
-				JOptionPane.showMessageDialog(null, "You have " + wordsToBeRevised + " word to be revised!",
-						"Vocabulary Builder", JOptionPane.INFORMATION_MESSAGE);
-			} else {
-				JOptionPane.showMessageDialog(null, "You have " + wordsToBeRevised + " words to be revised!",
-						"Vocabulary Builder", JOptionPane.INFORMATION_MESSAGE);
-			}
+		if (tabbedPane.getTitleAt(tabbedPane.getSelectedIndex()).equals("Review") && reviseWordList.size() > 0) {
+			lblNoOfWordsRemaining.setText(String.valueOf(reviseWordList.size()));
+//			if (reviseWordList.size() == 1) {
+//				JOptionPane.showMessageDialog(null, "You have " + reviseWordList.size() + " word to be revised!",
+//						"Vocabulary Builder", JOptionPane.INFORMATION_MESSAGE);
+//			} else {
+//				JOptionPane.showMessageDialog(null, "You have " + reviseWordList.size() + " words to be revised!",
+//						"Vocabulary Builder", JOptionPane.INFORMATION_MESSAGE);
+//			}
 		} else if (tabbedPane.getTitleAt(tabbedPane.getSelectedIndex()).equals("Stats")) {
 		}
 	}
@@ -423,16 +433,20 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 				while (line != null) {
 					data = line.split("\\|");
 					ArrayList<String> meaningData = new ArrayList<String>(Arrays.asList(data[2].split("\\^")));
-					if (meaningData.size() == 1 && meaningData.get(0).length() == 0) { // no meanings
+					if (meaningData.size() == 1 && meaningData.get(0).length() == 0) { // no
+																						// meanings
 						meaningData = new ArrayList<String>();
 					}
+					String[] reviseDateArray = data[6].split("/");
+					LocalDate ld = LocalDate.of(Integer.parseInt(reviseDateArray[2]),
+							Integer.parseInt(reviseDateArray[1]), Integer.parseInt(reviseDateArray[0]));
 					Word wordFromFile = new Word(data[0], data[1], meaningData, Integer.parseInt(data[3]), data[4],
-							data[5], Boolean.valueOf(data[6]));
-					noOfWordsInLevel[wordFromFile.getLevel()]++;
-					wordList.add(wordFromFile);
-					if (wordFromFile.getRev()) {
+							data[5], ld);
+					if (ld.isBefore(LocalDate.now()) || ld.isEqual(LocalDate.now())) {
 						reviseWordList.add(wordFromFile);
 					}
+					noOfWordsInLevel[wordFromFile.getLevel()]++;
+					wordList.add(wordFromFile);
 					line = in.readLine();
 				}
 				in.close();
@@ -454,7 +468,6 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 			modelWord.setValueAt(word.getPhonetic(), insertIndex, 2);
 			modelWord.setValueAt(word.getLevel(), insertIndex, 4);
 			modelWord.setValueAt(word.getDateAdded(), insertIndex, 5);
-			System.out.println(word.getNumMeaning());
 			for (int j = 0; j < word.getNumMeaning(); j++) {
 				modelWord.setValueAt(word.getMeaning(j), insertIndex, 3);
 				modelWord.setValueAt(i + "|" + j, insertIndex, 0);
@@ -484,25 +497,13 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 				out.write(word.getLevel() + fieldDelimit);
 				out.write(word.getDateAdded() + fieldDelimit);
 				out.write(word.getDateCompleted() + fieldDelimit);
-				out.write(String.valueOf(word.getRev()));
+				out.write(word.getDateRevise().getDayOfMonth() + "/" + word.getDateRevise().getMonthValue() + "/"
+						+ word.getDateRevise().getYear());
 				out.newLine();
 			}
 			out.close();
 		} catch (IOException f) {
 			JOptionPane.showMessageDialog(null, f.getMessage() + "!", "Error", JOptionPane.ERROR_MESSAGE);
-		}
-	}
-
-	public Date stringToDate(String s) {
-		try {
-			// System.out.println(s);
-			SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
-			// System.out.println(dateFormat.format(s));
-			return dateFormat.parse(s);
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.getMessage();
-			return null;
 		}
 	}
 
@@ -552,7 +553,7 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 					wordType = wordType.replaceAll("\"", "").replaceAll(",", "");
 				}
 			}
-			
+
 			conn.disconnect();
 			return meanings;
 

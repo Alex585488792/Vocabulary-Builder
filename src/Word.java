@@ -1,16 +1,15 @@
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 
 public class Word {
 	public DateFormat df = new SimpleDateFormat("dd/MM/yyyy");
 	private String name;
 	private String phonetic;
 	private ArrayList<String> meaning;
-	private String dateAdded, dateCompleted;
-	private Boolean rev;
+	private String dateAdded, dateComplete;
+	private LocalDate dateRevise;
 	private int lv, noOfMeanings;
 //	public Word() {
 //		name = "";
@@ -20,14 +19,14 @@ public class Word {
 //		lv = 0;
 //		rev = false;
 //	}
-	public Word(String n, String p, ArrayList<String> m, int lvl,String da, String dc, Boolean revi) {
+	public Word(String n, String p, ArrayList<String> m, int lvl,String da, String dc, LocalDate dr) {
 		name = n;
 		phonetic = p;
 		meaning = m;
 		noOfMeanings = m.size();
 		dateAdded = da;
-		rev = revi;
-		dateCompleted = dc;
+		dateComplete = dc;
+		dateRevise = dr;
 	}
 	public void setName(String n) {
 		this.name = n;
@@ -43,6 +42,14 @@ public class Word {
 	}
 	public void setMeaning(String m, int i) {
 		this.meaning.set(i, m);
+	}
+	public String getMeaning() {
+		String m = "";
+		for (int i = 0; i < this.noOfMeanings; i++) {
+			m = m.concat(this.meaning.get(i));
+			m = m.concat("\n");
+		}
+		return m;
 	}
 	public String getMeaning(int i) {
 		return this.meaning.get(i);
@@ -73,15 +80,12 @@ public class Word {
 		return this.dateAdded;
 	}
 	public void setDateCompleted(String d) {
-		this.dateCompleted = d;
+		this.dateComplete = d;
 	}
 	public String getDateCompleted() {
-		return this.dateCompleted;
+		return this.dateComplete;
 	}
-	public void setRev(Boolean b) {
-		this.rev = b;
-	}
-	public Boolean getRev() {
-		return this.rev;
+	public LocalDate getDateRevise() {
+		return this.dateRevise;
 	}
 }
