@@ -10,7 +10,7 @@ public class Word {
 	private ArrayList<String> meaning;
 	private String dateAdded, dateComplete;
 	private LocalDate dateRevise;
-	private int lv, noOfMeanings;
+	private int lv, noOfMeanings, id;
 //	public Word() {
 //		name = "";
 //		meaning = new String[5];
@@ -19,14 +19,19 @@ public class Word {
 //		lv = 0;
 //		rev = false;
 //	}
-	public Word(String n, String p, ArrayList<String> m, int lvl,String da, String dc, LocalDate dr) {
+	public Word(int i, String n, String p, ArrayList<String> m, int lvl,String da, String dc, LocalDate dr) {
+		id = i;
 		name = n;
 		phonetic = p;
 		meaning = m;
 		noOfMeanings = m.size();
+		lv = lvl;
 		dateAdded = da;
 		dateComplete = dc;
 		dateRevise = dr;
+	}
+	public int getId() {
+		return this.id;
 	}
 	public void setName(String n) {
 		this.name = n;
@@ -87,5 +92,8 @@ public class Word {
 	}
 	public LocalDate getDateRevise() {
 		return this.dateRevise;
+	}
+	public void setNewRevDate() {
+		this.dateRevise = LocalDate.now().plusDays(3);
 	}
 }
