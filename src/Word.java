@@ -8,9 +8,8 @@ public class Word {
 	private String name;
 	private String phonetic;
 	private ArrayList<String> meaning;
-	private String dateAdded, dateComplete;
-	private LocalDate dateRevise;
-	private int lv, noOfMeanings, id;
+	private LocalDate dateAdded, dateRevise, dateComplete;
+	private int lv, noOfMeanings, id, nDontRemember;
 //	public Word() {
 //		name = "";
 //		meaning = new String[5];
@@ -19,7 +18,7 @@ public class Word {
 //		lv = 0;
 //		rev = false;
 //	}
-	public Word(int i, String n, String p, ArrayList<String> m, int lvl,String da, String dc, LocalDate dr) {
+	public Word(int i, String n, String p, ArrayList<String> m, int lvl,LocalDate da, LocalDate dc, LocalDate dr) {
 		id = i;
 		name = n;
 		phonetic = p;
@@ -73,27 +72,36 @@ public class Word {
 		return this.noOfMeanings;
 	}
 	public void incLevel() {
-		this.lv++;
+		if (nDontRemember < 2) {
+			this.lv++;	
+		}
+		nDontRemember = 0;
+		if (lv == 10) {
+			this.dateRevise = LocalDate.MIN;
+		}
 	}
 	public int getLevel() {
 		return this.lv;
 	}
-	public void setDateAdded(String d) {
+	public void setDateAdded(LocalDate d) {
 		this.dateAdded = d;
 	}
-	public String getDateAdded() {
+	public LocalDate getDateAdded() {
 		return this.dateAdded;
 	}
-	public void setDateCompleted(String d) {
+	public void setDateCompleted(LocalDate d) {
 		this.dateComplete = d;
 	}
-	public String getDateCompleted() {
+	public LocalDate getDateCompleted() {
 		return this.dateComplete;
 	}
 	public LocalDate getDateRevise() {
 		return this.dateRevise;
 	}
 	public void setNewRevDate() {
-		this.dateRevise = LocalDate.now().plusDays(3);
+		this.dateRevise = LocalDate.now().plusDays(2 * this.lv);
+	}
+	public void dontRemember() {
+		this.nDontRemember++;
 	}
 }
