@@ -1,10 +1,7 @@
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
 
 public class Word {
-	public DateFormat df = new SimpleDateFormat("dd/MM/yyyy");
 	private String name;
 	private String phonetic;
 	private ArrayList<String> meaning;

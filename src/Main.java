@@ -10,8 +10,6 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.awt.event.*;
@@ -25,9 +23,8 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 	private JPanel wordPanel, statPanel, reviewPanel, dictPanel;
 	private JButton btnAdd, btnEdit, btnDelete, btnSearch, btnAddtoList, btnReviewAnswer, btnRemember, btnDontRemember;
 	private DefaultTableModel modelWord;
-	private DateFormat df = new SimpleDateFormat("dd/MM/yyyy");
 	private BufferedWriter out;
-	private File wordFile = new File("words.txt"), statFile = new File("stats.txt");
+	private File wordFile = new File("words.txt");
 	private String wordSearch;
 	private ArrayList<String> meaningSearch;
 	private int readFileIndex = 0, id = 0, reviseIndex = 0;
@@ -60,7 +57,7 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 		// JTable
 		String[] wordColumnTitle = { "ID", "Word", "<html>Phonetic<br> Symbol", "Meaning", "Progress",
 				"<html>Date <br>Added" };
-		modelWord = new DefaultTableModel(1000, wordColumnTitle.length);
+		modelWord = new DefaultTableModel(100, wordColumnTitle.length);
 		modelWord.setColumnIdentifiers(wordColumnTitle);
 		wordTable = new JTable(modelWord) {
 			private static final long serialVersionUID = 1L;
@@ -110,7 +107,6 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 		statTA = new JTextArea(20, 45);
 		statTA.setEditable(false);
 		statTA.setFont(new Font("Times new Roman", Font.PLAIN, 24));
-		statFileToArray(statFile);
 
 		// Dictionary panel JComponents
 		JLabel dictionaryLabel = new JLabel("DICTIONARY");
@@ -333,7 +329,9 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 				int wordId = Integer.parseInt(arrId[0]);
 
 				if (option == 1) { // delete word
-					boolean b = reviseWordList.remove(wordList.get(wordId));
+					if (reviseWordList.remove(wordList.get(wordId)) && wordReviewing.equals(wordList.get(wordId))) {
+						setNewWord();
+					}
 					for (int i = 0; i < reviseWordList.size(); i++) {
 						System.out.println("a");
 						System.out.println(reviseWordList.get(i).getName());
@@ -392,18 +390,12 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 			btnRemember.setEnabled(true);
 			btnDontRemember.setEnabled(true);
 		} else if (e.getSource() == btnRemember) {
-			btnReviewAnswer.setVisible(true);
-			btnRemember.setEnabled(false);
-			btnDontRemember.setEnabled(false);
 			if (reviseWordList.remove(wordReviewing)) {
 				increaseWordLevel(wordReviewing.getId());
 			}
 			lblNoOfWordsRemaining.setText(String.valueOf(reviseWordList.size()));
 			setNewWord();
 		} else if (e.getSource() == btnDontRemember) {
-			btnReviewAnswer.setVisible(true);
-			btnRemember.setEnabled(false);
-			btnDontRemember.setEnabled(false);
 			wordReviewing.dontRemember();
 			setNewWord();
 		}
@@ -508,12 +500,13 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 
 	public void wordArrayToTable(ArrayList<Word> aw) {
 		int insertIndex = 0;
+		ImageIcon image = new ImageIcon("images\\test.png");
 		for (int i = 0; i < aw.size(); i++) {
 			Word word = aw.get(i);
 			modelWord.setValueAt(word.getName(), insertIndex, 1);
 			modelWord.setValueAt(word.getPhonetic(), insertIndex, 2);
 			if (word.getLevel() >= 10) {
-				modelWord.setValueAt("Mastered", insertIndex, 4);
+				modelWord.setValueAt(image, insertIndex, 4);
 			} else {
 				modelWord.setValueAt(word.getLevel() + dateDelimit + (noOfWordsInLevel.length - 1), insertIndex, 4);
 			}
@@ -640,6 +633,9 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 	}
 
 	public void setNewWord() {
+		btnReviewAnswer.setVisible(true);
+		btnRemember.setEnabled(false);
+		btnDontRemember.setEnabled(false);
 		if (reviseWordList.size() > 0) {
 			if (reviseIndex >= reviseWordList.size() - 1) {
 				reviseIndex = 0;
@@ -651,8 +647,6 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 			answerTA.setText(reviseWordList.get(reviseIndex).getMeaning());
 		} else {
 			btnReviewAnswer.setEnabled(false);
-			btnRemember.setEnabled(false);
-			btnDontRemember.setEnabled(false);
 			wordReview.setText("");
 			JOptionPane.showMessageDialog(null, "Congratulations! You have completed this review session!",
 					"Vocabulary Builder", JOptionPane.INFORMATION_MESSAGE);
