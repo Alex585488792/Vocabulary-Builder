@@ -126,6 +126,7 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 		// searchResultsTA.setEditable(false);
 		btnSearch = new JButton("Search");
 		btnSearch.addActionListener(this);
+		btnSearch.addKeyListener(this);
 		btnSearch.setFocusable(true);
 		btnAddtoList = new JButton("Add to list");
 		btnAddtoList.setPreferredSize(new Dimension(250, 30));
@@ -192,13 +193,14 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 		reviewPanel.add(answerTAScroll);
 		reviewPanel.add(btnRemember);
 		reviewPanel.add(btnDontRemember);
-		tabbedPane.addTab("Review", reviewPanel);
 		tabbedPane.addTab("Dictionary", dictPanel);
 		tabbedPane.addTab("Word", wordPanel);
 		tabbedPane.addTab("Stats", statPanel);
+		tabbedPane.addTab("Review", reviewPanel);
 
 		setTitle("Vocabulary Builder");
 		add(tabbedPane);
+		addKeyListener(this);
 		setSize(900, 800);
 		setResizable(false);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -333,10 +335,9 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 						setNewWord();
 					}
 					for (int i = 0; i < reviseWordList.size(); i++) {
-						System.out.println("a");
-						System.out.println(reviseWordList.get(i).getName());
 					}
-//					if (wordReviewing.getId() == wor) Deleting a word that is in review word list
+					// if (wordReviewing.getId() == wor) Deleting a word that is
+					// in review word list
 					wordList.remove(wordId);
 					clearTableModel(modelWord);
 					wordArrayToTable(wordList);
@@ -363,7 +364,8 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 			btnAddtoList.setEnabled(true);
 			wordSearch = "";
 			wordSearch = wordSearchTF.getText();
-			meaningSearch = searchWord(wordSearch, "oxford");
+			meaningSearch = searchWord(wordSearch, "dict cn");
+			
 			if (meaningSearch != null) {
 				for (int i = 0; i < meaningSearch.size(); i++) {
 					searchResultsTA.append(i + 1 + ". " + meaningSearch.get(i) + "\n");
@@ -374,7 +376,7 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 				JOptionPane.showMessageDialog(null, "Word cannot be added, since word/and or meaning is empty",
 						"Vocabulary Builder", JOptionPane.WARNING_MESSAGE);
 			} else {
-				
+
 				Word newWord = new Word(id, wordSearch, "", meaningSearch, 0, LocalDate.now(), LocalDate.MIN,
 						LocalDate.now().plusDays(1));
 				id++;
@@ -437,6 +439,7 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 					statTA.append("Number of words in level " + i + ": " + noOfWordsInLevel[i] + "\n");
 				}
 			}
+		} else if (tabbedPane.getTitleAt(tabbedPane.getSelectedIndex()).equals("Dictionary")) {
 		}
 	}
 
@@ -445,12 +448,9 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 	}
 
 	public void keyReleased(KeyEvent e) {
-		// TODO Auto-generated method stub
-
 	}
 
 	public void keyTyped(KeyEvent e) {
-		// TODO Auto-generated method stub
 
 	}
 
@@ -494,8 +494,44 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 		}
 	}
 
-	public void statFileToArray(File f) {
-
+	public void settingFileToArray(File f) {
+		if (f.exists()) {
+			try {
+				BufferedReader in = new BufferedReader(new FileReader(f));
+				String line;
+				String[] data;
+				line = in.readLine();
+				while (line != null) {
+					data = line.split("");
+					ArrayList<String> meaningData = new ArrayList<String>(Arrays.asList(data[2].split("\\^")));
+					if (meaningData.size() == 1 && meaningData.get(0).length() == 0) { // no
+																						// meanings
+						meaningData = new ArrayList<String>();
+					}
+					String[] addDateArray = data[4].split(dateDelimit);
+					String[] reviseDateArray = data[6].split(dateDelimit);
+					String[] completeDateArray = data[5].split(dateDelimit);
+					LocalDate la = LocalDate.of(Integer.parseInt(addDateArray[2]), Integer.parseInt(addDateArray[1]),
+							Integer.parseInt(addDateArray[0]));
+					LocalDate ld = LocalDate.of(Integer.parseInt(reviseDateArray[2]),
+							Integer.parseInt(reviseDateArray[1]), Integer.parseInt(reviseDateArray[0]));
+					LocalDate lc = LocalDate.of(Integer.parseInt(completeDateArray[2]),
+							Integer.parseInt(completeDateArray[1]), Integer.parseInt(completeDateArray[0]));
+					Word wordFromFile = new Word(id, data[0], data[1], meaningData, Integer.parseInt(data[3]), la, lc,
+							ld);
+					id++;
+					if (ld.isBefore(LocalDate.now()) || ld.isEqual(LocalDate.now())) {
+						reviseWordList.add(wordFromFile);
+					}
+					noOfWordsInLevel[wordFromFile.getLevel()]++;
+					wordList.add(wordFromFile);
+					line = in.readLine();
+				}
+				in.close();
+			} catch (IOException e) {
+				System.err.println("IOException: " + e.getMessage());
+			}
+		}
 	}
 
 	public void wordArrayToTable(ArrayList<Word> aw) {
@@ -562,46 +598,63 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 	}
 
 	public ArrayList<String> searchWord(String word, String dict) {
+		ArrayList<String> meanings = new ArrayList<String>();
 		try {
 			URL url;
 			if (dict.equals("oxford")) {
 				url = new URL("https://od-api.oxforddictionaries.com:443/api/v1/entries/en/" + word + "/definitions");
+				HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+				conn.setRequestMethod("GET");
+				conn.setRequestProperty("Accept", "application/json");
+				conn.setRequestProperty("app_id", "7834b310");
+				conn.setRequestProperty("app_key", "82781012e44b2637051c49060569cce5");
+
+				if (conn.getResponseCode() != 200) {
+					throw new RuntimeException("Failed : HTTP error code : " + conn.getResponseCode());
+				}
+
+				BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
+				
+				boolean subsenses = false;
+				String output;
+				while ((output = br.readLine()) != null) {
+					String trimmed = output.trim();
+					if (trimmed.contains("subsenses")) {
+						subsenses = true;
+					} else if (trimmed.equals("]")) {
+						subsenses = false;
+					}
+					if (trimmed.contains("\"definitions\"") && !subsenses) {
+						meanings.add(br.readLine().trim().replaceAll("^\"|\"$", ""));
+					}
+					if (trimmed.contains("lexicalCategory")) {
+						String wordType = trimmed.replaceAll("\"lexicalCategory\": \"", "");
+						wordType = wordType.replaceAll("\"", "").replaceAll(",", "");
+					}
+				}
+
+				conn.disconnect();
+				return meanings;
+			} else if (dict.equals("dict cn")) {
+				url = new URL("http://dict.cn/" + word);
+				BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
+
+				String output;
+				// TO-DO Search love
+				while ((output = in.readLine()) != null) {
+					if (output.contains("strong")) {
+						meanings.add(output.trim().replaceAll("^\"|\"$", "")
+								.replaceAll("<strong>", "").replaceAll("</strong>", ""));
+					}
+					
+				}
+					
+				in.close();
+				return meanings;
 			} else {
 				url = new URL("");
+				return null;
 			}
-
-			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-			conn.setRequestMethod("GET");
-			conn.setRequestProperty("Accept", "application/json");
-			conn.setRequestProperty("app_id", "7834b310");
-			conn.setRequestProperty("app_key", "82781012e44b2637051c49060569cce5");
-
-			if (conn.getResponseCode() != 200) {
-				throw new RuntimeException("Failed : HTTP error code : " + conn.getResponseCode());
-			}
-
-			BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
-			ArrayList<String> meanings = new ArrayList<String>();
-			boolean subsenses = false;
-			String output;
-			while ((output = br.readLine()) != null) {
-				String trimmed = output.trim();
-				if (trimmed.contains("subsenses")) {
-					subsenses = true;
-				} else if (trimmed.equals("]")) {
-					subsenses = false;
-				}
-				if (trimmed.contains("\"definitions\"") && !subsenses) {
-					meanings.add(br.readLine().trim().replaceAll("^\"|\"$", ""));
-				}
-				if (trimmed.contains("lexicalCategory")) {
-					String wordType = trimmed.replaceAll("\"lexicalCategory\": \"", "");
-					wordType = wordType.replaceAll("\"", "").replaceAll(",", "");
-				}
-			}
-
-			conn.disconnect();
-			return meanings;
 
 		} catch (MalformedURLException e) {
 			JOptionPane.showMessageDialog(null, "URL Malformed", "Vocabulary Builder", JOptionPane.ERROR_MESSAGE);
