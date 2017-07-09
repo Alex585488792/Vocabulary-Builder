@@ -26,6 +26,9 @@ public class Word {
 		dateComplete = dc;
 		dateRevise = dr;
 	}
+	public void setId(int idd) {
+		this.id = idd;
+	}
 	public int getId() {
 		return this.id;
 	}
@@ -100,5 +103,11 @@ public class Word {
 	}
 	public void dontRemember() {
 		this.nDontRemember++;
+	}
+	public void delete() {
+		// TODO Auto-generated method stub
+		name = "";
+		meaning.clear();
+		phonetic = "";
 	}
 }

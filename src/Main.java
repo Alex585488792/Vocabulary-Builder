@@ -21,7 +21,8 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 	private static final String meanDelimit = "^";
 	private static final String dateDelimit = "/";
 	private JPanel wordPanel, statPanel, reviewPanel, dictPanel;
-	private JButton btnAdd, btnEdit, btnDelete, btnSearch, btnAddtoList, btnReviewAnswer, btnRemember, btnDontRemember;
+	private JButton btnAdd, btnEdit, btnDelete, btnSearch, btnAddtoList, btnReviewAnswer, 
+	btnRemember, btnDontRemember, btnPickWord, btnSAT, btnTOEFL, btnGRE;
 	private DefaultTableModel modelWord;
 	private BufferedWriter out;
 	private File wordFile = new File("words.txt");
@@ -55,7 +56,7 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 
 		// word panel JComponents
 		// JTable
-		String[] wordColumnTitle = { "ID", "Word", "<html>Phonetic<br> Symbol", "Meaning", "Progress",
+		String[] wordColumnTitle = { "", "Word", "<html>Phonetic<br> Symbol", "Meaning", "Progress",
 				"<html>Date <br>Added" };
 		modelWord = new DefaultTableModel(100, wordColumnTitle.length);
 		modelWord.setColumnIdentifiers(wordColumnTitle);
@@ -66,12 +67,13 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 				return false;
 			};
 		};
-		wordTable.getColumnModel().getColumn(0).setMinWidth(50);
+		wordTable.getColumnModel().getColumn(0).setMinWidth(0);
 		wordTable.getColumnModel().getColumn(1).setMinWidth(100);
-		wordTable.getColumnModel().getColumn(2).setMinWidth(50);
-		wordTable.getColumnModel().getColumn(3).setMinWidth(400);
-		wordTable.getColumnModel().getColumn(4).setMinWidth(50);
-		wordTable.getColumnModel().getColumn(5).setMinWidth(60);
+		wordTable.getColumnModel().getColumn(2).setMinWidth(60);
+//		wordTable.getColumnModel().getColumn(3).setMinWidth(400);
+		wordTable.getColumnModel().getColumn(3).setMinWidth(510);
+		wordTable.getColumnModel().getColumn(4).setMinWidth(60);
+		wordTable.getColumnModel().getColumn(5).setMinWidth(70);
 		wordTable.setPreferredScrollableViewportSize(new Dimension(800, 600));
 		wordTable.setFillsViewportHeight(true);
 		wordTable.setPreferredSize(null);
@@ -109,29 +111,36 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 		statTA.setFont(new Font("Times new Roman", Font.PLAIN, 24));
 
 		// Dictionary panel JComponents
-		JLabel dictionaryLabel = new JLabel("DICTIONARY");
-		dictionaryLabel.setFont(new Font("Times new Roman", Font.BOLD, 72));
+		JLabel dictionaryLabel = new JLabel("Type the word and press Search");
+		dictionaryLabel.setFont(new Font("Times new Roman", Font.TRUETYPE_FONT, 48));
 		dictionaryLabel.setAlignmentX(CENTER_ALIGNMENT);
 		wordSearchTF = new JTextField(30);
 		wordSearchTF.setMinimumSize(new Dimension(600, 50));
 		wordSearchTF.setPreferredSize(new Dimension(600, 50));
-		wordSearchTF.setFont(new Font("Calibri", Font.PLAIN, 24));
+		wordSearchTF.setFont(new Font("Times new Roman", Font.PLAIN, 30));
 		wordSearchTF.setAlignmentX(CENTER_ALIGNMENT);
 		searchResultsTA = new JTextArea();
-		searchResultsTA.setFont(new Font("MS Song", Font.PLAIN, 24));
-		searchResultsTA.setPreferredSize(new Dimension(750, 500));
-		searchResultsTA.setMaximumSize(new Dimension(700, 500));
+		searchResultsTA.setFont(new Font("Times new Roman", Font.PLAIN, 24));
+		searchResultsTA.setPreferredSize(new Dimension(750, 300));
+		searchResultsTA.setMaximumSize(new Dimension(700, 300));
 		searchResultsTA.setLineWrap(true);
 		searchResultsTA.setWrapStyleWord(true);
+		searchResultsTA.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 		// searchResultsTA.setEditable(false);
 		btnSearch = new JButton("Search");
 		btnSearch.addActionListener(this);
 		btnSearch.addKeyListener(this);
 		btnSearch.setFocusable(true);
-		btnAddtoList = new JButton("Add to list");
+		btnAddtoList = new JButton("Add to word list");
 		btnAddtoList.setPreferredSize(new Dimension(250, 30));
 		btnAddtoList.addActionListener(this);
 		btnAddtoList.setEnabled(false);
+		JLabel orLabel = new JLabel("or");
+		orLabel.setPreferredSize(new Dimension(200,200));
+		orLabel.setFont(new Font("Times new Roman", Font.TRUETYPE_FONT, 48));
+		btnPickWord = new JButton("<html>Pick word<br>from list");
+		btnPickWord.setPreferredSize(new Dimension(100,100));
+		btnPickWord.addActionListener(this);
 
 		// Review panel JComponents
 		JLabel reviewQ = new JLabel("What is the meaning of this word?");
@@ -152,7 +161,7 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 			btnReviewAnswer.setEnabled(false);
 		}
 		answerTA = new JTextArea();
-		answerTA.setFont(new Font("Arial", Font.PLAIN, 24));
+		answerTA.setFont(new Font("Times new Roman", Font.PLAIN, 24));
 		answerTA.setWrapStyleWord(true);
 		answerTA.setLineWrap(true);
 		answerTA.setEditable(false);
@@ -161,16 +170,21 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 		answerTAScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
 		btnRemember = new JButton("I Remember");
 		btnRemember.setBackground(Color.GREEN);
-		btnRemember.setFont(new Font("Arial", Font.PLAIN, 36));
+		btnRemember.setFont(new Font("Times new Roman", Font.PLAIN, 36));
 		btnRemember.setBounds(50, 600, 380, 100);
 		btnRemember.setEnabled(false);
 		btnRemember.addActionListener(this);
 		btnDontRemember = new JButton("I Don't Remember");
 		btnDontRemember.setBackground(Color.RED);
-		btnDontRemember.setFont(new Font("Arial", Font.PLAIN, 36));
+		btnDontRemember.setFont(new Font("Times new Roman", Font.PLAIN, 36));
 		btnDontRemember.setBounds(470, 600, 380, 100);
 		btnDontRemember.setEnabled(false);
 		btnDontRemember.addActionListener(this);
+		if (reviseWordList.size() > 0) {
+			wordReviewing = reviseWordList.get(reviseIndex);
+			wordReview.setText(reviseWordList.get(reviseIndex).getName());
+			answerTA.setText(reviseWordList.get(reviseIndex).getMeaning());
+		}
 
 		wordPanel.add(btnAdd);
 		wordPanel.add(btnEdit);
@@ -186,6 +200,8 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 		dictPanel.add(btnAddtoList);
 		dictPanel.add(Box.createVerticalStrut(20));
 		dictPanel.add(searchResultsTA);
+		dictPanel.add(orLabel);
+		dictPanel.add(btnPickWord);
 		reviewPanel.add(reviewQ);
 		reviewPanel.add(lblNoOfWordsRemaining);
 		reviewPanel.add(wordReview);
@@ -193,8 +209,8 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 		reviewPanel.add(answerTAScroll);
 		reviewPanel.add(btnRemember);
 		reviewPanel.add(btnDontRemember);
-		tabbedPane.addTab("Dictionary", dictPanel);
-		tabbedPane.addTab("Word", wordPanel);
+		tabbedPane.addTab("Word List", wordPanel);
+		tabbedPane.addTab("Add Word", dictPanel);
 		tabbedPane.addTab("Stats", statPanel);
 		tabbedPane.addTab("Review", reviewPanel);
 
@@ -331,14 +347,17 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 				int wordId = Integer.parseInt(arrId[0]);
 
 				if (option == 1) { // delete word
-					if (reviseWordList.remove(wordList.get(wordId)) && wordReviewing.equals(wordList.get(wordId))) {
-						setNewWord();
+					if (reviseWordList.remove(wordList.get(wordId))) {
+						if (wordReviewing.equals(wordList.get(wordId))) {
+							setNewWord();
+						}
+						
 					}
 					for (int i = 0; i < reviseWordList.size(); i++) {
 					}
 					// if (wordReviewing.getId() == wor) Deleting a word that is
 					// in review word list
-					wordList.remove(wordId);
+					wordList.get(wordId).delete();
 					clearTableModel(modelWord);
 					wordArrayToTable(wordList);
 					wordArrayToFile(wordList);
@@ -364,7 +383,8 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 			btnAddtoList.setEnabled(true);
 			wordSearch = "";
 			wordSearch = wordSearchTF.getText();
-			meaningSearch = searchWord(wordSearch, "dict cn");
+			
+			meaningSearch = searchWord(wordSearch, "oxford");
 			
 			if (meaningSearch != null) {
 				for (int i = 0; i < meaningSearch.size(); i++) {
@@ -400,6 +420,41 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 		} else if (e.getSource() == btnDontRemember) {
 			wordReviewing.dontRemember();
 			setNewWord();
+		}
+		else if (e.getSource() == btnPickWord) {
+			// pick a word list panel
+			dictPanel.removeAll();
+			revalidate();
+			repaint();
+			dictPanel.setLayout(new BoxLayout(dictPanel, BoxLayout.PAGE_AXIS));
+			JLabel lblChooseList = new JLabel("Choose a list:");
+			lblChooseList.setAlignmentX(Component.CENTER_ALIGNMENT);
+			lblChooseList.setFont(new Font("Times new Roman", Font.TRUETYPE_FONT, 48));
+			btnSAT = new JButton("SAT");
+			btnSAT.setAlignmentX(Component.CENTER_ALIGNMENT);
+			btnSAT.setFont(new Font("Times new Roman", Font.PLAIN, 36));
+			btnTOEFL = new JButton("TOEFL");
+			btnTOEFL.setAlignmentX(Component.CENTER_ALIGNMENT);
+			btnTOEFL.setFont(new Font("Times new Roman", Font.PLAIN, 36));
+			btnGRE = new JButton("GRE");
+			btnGRE.setAlignmentX(Component.CENTER_ALIGNMENT);
+			btnGRE.setFont(new Font("Times new Roman", Font.PLAIN, 36));
+			
+			dictPanel.add(lblChooseList);
+			dictPanel.add(Box.createVerticalStrut(100));
+			dictPanel.add(btnSAT);
+			dictPanel.add(Box.createVerticalStrut(100));
+			dictPanel.add(btnTOEFL);
+			dictPanel.add(Box.createVerticalStrut(100));
+			dictPanel.add(btnGRE);
+		}
+		else if (e.getSource() == btnSAT) {
+			dictPanel.removeAll();
+			revalidate();
+			repaint();
+			JLabel lblTOEFL = new JLabel("TOEFL Word List");
+			lblTOEFL.setFont(new Font("Times new Roman", Font.TRUETYPE_FONT, 48));
+			dictPanel.add(lblTOEFL);
 		}
 	}
 
@@ -439,7 +494,9 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 					statTA.append("Number of words in level " + i + ": " + noOfWordsInLevel[i] + "\n");
 				}
 			}
-		} else if (tabbedPane.getTitleAt(tabbedPane.getSelectedIndex()).equals("Dictionary")) {
+		} else if (tabbedPane.getTitleAt(tabbedPane.getSelectedIndex()).equals("Word")) {
+			clearTableModel(modelWord);
+			wordArrayToTable(wordList);
 		}
 	}
 
@@ -536,13 +593,15 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 
 	public void wordArrayToTable(ArrayList<Word> aw) {
 		int insertIndex = 0;
-		ImageIcon image = new ImageIcon("images\\test.png");
 		for (int i = 0; i < aw.size(); i++) {
 			Word word = aw.get(i);
+			if (word.getName() == "") {
+				continue;
+			}
 			modelWord.setValueAt(word.getName(), insertIndex, 1);
 			modelWord.setValueAt(word.getPhonetic(), insertIndex, 2);
 			if (word.getLevel() >= 10) {
-				modelWord.setValueAt(image, insertIndex, 4);
+				modelWord.setValueAt("Mastered", insertIndex, 4);
 			} else {
 				modelWord.setValueAt(word.getLevel() + dateDelimit + (noOfWordsInLevel.length - 1), insertIndex, 4);
 			}
@@ -563,6 +622,9 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 			out = new BufferedWriter(new FileWriter(wordFile, true));
 			for (int i = 0; i < aw.size(); i++) {
 				Word word = aw.get(i);
+				if (word.getName() == "") {
+					continue;
+				}
 				String meaningToFile = "";
 				for (int mi = 0; mi < word.getNumMeaning(); mi++) {
 					meaningToFile = meaningToFile.concat(word.getMeaning(mi));
@@ -643,6 +705,7 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 				// TO-DO Search love
 				while ((output = in.readLine()) != null) {
 					if (output.contains("strong")) {
+						System.out.println(output);
 						meanings.add(output.trim().replaceAll("^\"|\"$", "")
 								.replaceAll("<strong>", "").replaceAll("</strong>", ""));
 					}

@@ -1,8 +1,0 @@
-Total Number of words:
-Number of new words in past week:
-Number of words in Level 0:
-Number of words in Level 1:
-Number of words in Level 2:
-Number of words in Level 3:
-Number of words in Level 4:
-Number of words in Level 5:
