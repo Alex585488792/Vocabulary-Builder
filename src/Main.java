@@ -23,13 +23,13 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 	private JPanel wordPanel, statPanel, reviewPanel, dictPanel;
 	private JButton btnAdd, btnEdit, btnDelete, btnSearch, btnAddtoList, btnReviewAnswer, 
 	btnRemember, btnDontRemember, btnPickWord, btnSAT, btnTOEFL, btnGRE;
-	private DefaultTableModel modelWord;
+	private DefaultTableModel modelWord, modelExtWordList;
 	private BufferedWriter out;
 	private File wordFile = new File("words.txt");
 	private String wordSearch;
 	private ArrayList<String> meaningSearch;
 	private int readFileIndex = 0, id = 0, reviseIndex = 0;
-	private JTable wordTable;
+	private JTable wordTable, extList;
 	private JTextField wordTF, phoneticSymTF, wordSearchTF;
 	private JTextArea meaningTA, searchResultsTA, answerTA, statTA;
 	private JLabel wordReview, lblNoOfWordsRemaining;
@@ -38,6 +38,7 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 	private Word wordReviewing;
 	private ArrayList<Word> wordList = new ArrayList<Word>(), reviseWordList = new ArrayList<Word>();
 	private int[] noOfWordsInLevel = new int[11];
+	String[] wordExtColumnTitle = {"Word", "Meaning", "Add Word" };
 
 	public static void main(String[] args) {
 		new Main();
@@ -433,12 +434,15 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 			btnSAT = new JButton("SAT");
 			btnSAT.setAlignmentX(Component.CENTER_ALIGNMENT);
 			btnSAT.setFont(new Font("Times new Roman", Font.PLAIN, 36));
+			btnSAT.addActionListener(this);
 			btnTOEFL = new JButton("TOEFL");
 			btnTOEFL.setAlignmentX(Component.CENTER_ALIGNMENT);
 			btnTOEFL.setFont(new Font("Times new Roman", Font.PLAIN, 36));
+			btnTOEFL.addActionListener(this);
 			btnGRE = new JButton("GRE");
 			btnGRE.setAlignmentX(Component.CENTER_ALIGNMENT);
 			btnGRE.setFont(new Font("Times new Roman", Font.PLAIN, 36));
+			btnGRE.addActionListener(this);
 			
 			dictPanel.add(lblChooseList);
 			dictPanel.add(Box.createVerticalStrut(100));
@@ -448,13 +452,53 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 			dictPanel.add(Box.createVerticalStrut(100));
 			dictPanel.add(btnGRE);
 		}
-		else if (e.getSource() == btnSAT) {
+		else if (e.getSource() == btnTOEFL) {
 			dictPanel.removeAll();
 			revalidate();
 			repaint();
+			dictPanel = new JPanel(new FlowLayout());
 			JLabel lblTOEFL = new JLabel("TOEFL Word List");
 			lblTOEFL.setFont(new Font("Times new Roman", Font.TRUETYPE_FONT, 48));
+			lblTOEFL.setAlignmentX(Component.CENTER_ALIGNMENT);
+			ArrayList<Word> toefl = getTOEFLList(new File("toefl.txt"));
+//			modelExtWordList = new DefaultTableModel(3, wordExtColumnTitle.length);
+//			modelExtWordList.setColumnIdentifiers(wordExtColumnTitle);
+//			extList = new JTable(modelExtWordList) {
+//				private static final long serialVersionUID = 1L;
+//
+//				public boolean isCellEditable(int row, int column) {
+//					return false;
+//				};
+//			};
+//			extList.setPreferredScrollableViewportSize(new Dimension(100,100));
+//			extList.setMaximumSize(new Dimension(100,100));
+//			extList.setFillsViewportHeight(true);
+//			extList.setPreferredSize(null);
+			String[] wordColumnTitle = { "", "Word", "<html>Phonetic<br> Symbol", "Meaning", "Progress",
+			"<html>Date <br>Added" };
+	modelWord = new DefaultTableModel(100, wordColumnTitle.length);
+	modelWord.setColumnIdentifiers(wordColumnTitle);
+	wordTable = new JTable(modelWord) {
+		private static final long serialVersionUID = 1L;
+
+		public boolean isCellEditable(int row, int column) {
+			return false;
+		};
+	};
+	wordTable.getColumnModel().getColumn(0).setMinWidth(0);
+	wordTable.getColumnModel().getColumn(1).setMinWidth(100);
+	wordTable.getColumnModel().getColumn(2).setMinWidth(60);
+//	wordTable.getColumnModel().getColumn(3).setMinWidth(400);
+	wordTable.getColumnModel().getColumn(3).setMinWidth(510);
+	wordTable.getColumnModel().getColumn(4).setMinWidth(60);
+	wordTable.getColumnModel().getColumn(5).setMinWidth(70);
+	wordTable.setPreferredScrollableViewportSize(new Dimension(800, 600));
+	wordTable.setFillsViewportHeight(true);
+	wordTable.setPreferredSize(null);
+
 			dictPanel.add(lblTOEFL);
+			dictPanel.add(new JScrollPane(wordTable, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
+					JScrollPane.HORIZONTAL_SCROLLBAR_NEVER));
 		}
 	}
 
@@ -551,45 +595,6 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 		}
 	}
 
-	public void settingFileToArray(File f) {
-		if (f.exists()) {
-			try {
-				BufferedReader in = new BufferedReader(new FileReader(f));
-				String line;
-				String[] data;
-				line = in.readLine();
-				while (line != null) {
-					data = line.split("");
-					ArrayList<String> meaningData = new ArrayList<String>(Arrays.asList(data[2].split("\\^")));
-					if (meaningData.size() == 1 && meaningData.get(0).length() == 0) { // no
-																						// meanings
-						meaningData = new ArrayList<String>();
-					}
-					String[] addDateArray = data[4].split(dateDelimit);
-					String[] reviseDateArray = data[6].split(dateDelimit);
-					String[] completeDateArray = data[5].split(dateDelimit);
-					LocalDate la = LocalDate.of(Integer.parseInt(addDateArray[2]), Integer.parseInt(addDateArray[1]),
-							Integer.parseInt(addDateArray[0]));
-					LocalDate ld = LocalDate.of(Integer.parseInt(reviseDateArray[2]),
-							Integer.parseInt(reviseDateArray[1]), Integer.parseInt(reviseDateArray[0]));
-					LocalDate lc = LocalDate.of(Integer.parseInt(completeDateArray[2]),
-							Integer.parseInt(completeDateArray[1]), Integer.parseInt(completeDateArray[0]));
-					Word wordFromFile = new Word(id, data[0], data[1], meaningData, Integer.parseInt(data[3]), la, lc,
-							ld);
-					id++;
-					if (ld.isBefore(LocalDate.now()) || ld.isEqual(LocalDate.now())) {
-						reviseWordList.add(wordFromFile);
-					}
-					noOfWordsInLevel[wordFromFile.getLevel()]++;
-					wordList.add(wordFromFile);
-					line = in.readLine();
-				}
-				in.close();
-			} catch (IOException e) {
-				System.err.println("IOException: " + e.getMessage());
-			}
-		}
-	}
 
 	public void wordArrayToTable(ArrayList<Word> aw) {
 		int insertIndex = 0;
@@ -768,5 +773,25 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 					"Vocabulary Builder", JOptionPane.INFORMATION_MESSAGE);
 		}
 
+	}
+	ArrayList<Word> getTOEFLList(File f) {
+		ArrayList<Word> listTOEFL = new ArrayList<Word>();
+		if (f.exists()) {
+			try {
+				BufferedReader in = new BufferedReader(new FileReader(f));
+				String line;
+				line = in.readLine();
+				while (line != null) {
+					String[] arrLine = line.split(":");
+					Word wordTOEFL = new Word(arrLine[0], arrLine[1]);
+					listTOEFL.add(wordTOEFL);
+					line = in.readLine();
+				}
+				in.close();
+			} catch (IOException e) {
+				System.err.println("IOException: " + e.getMessage());
+			}
+		}
+		return listTOEFL;
 	}
 }

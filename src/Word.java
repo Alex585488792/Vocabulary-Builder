@@ -7,14 +7,12 @@ public class Word {
 	private ArrayList<String> meaning;
 	private LocalDate dateAdded, dateRevise, dateComplete;
 	private int lv, noOfMeanings, id, nDontRemember;
-//	public Word() {
-//		name = "";
-//		meaning = new String[5];
-//		dateAdded = new Date();
-//		dateCompleted = null;
-//		lv = 0;
-//		rev = false;
-//	}
+	public Word(String n, String m) {
+		name = n;
+		ArrayList<String> mArr = new ArrayList<String>();
+		mArr.add(m);
+		meaning = mArr;
+	}
 	public Word(int i, String n, String p, ArrayList<String> m, int lvl,LocalDate da, LocalDate dc, LocalDate dr) {
 		id = i;
 		name = n;
