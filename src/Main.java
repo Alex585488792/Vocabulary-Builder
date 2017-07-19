@@ -15,14 +15,14 @@ import java.time.LocalDate;
 import java.awt.event.*;
 import java.awt.*;
 
-public class Main extends JFrame implements ActionListener, ChangeListener, KeyListener {
+public class Main extends JFrame implements ActionListener, ChangeListener {
 	private static final long serialVersionUID = 1L;
 	private static final String fieldDelimit = "|";
 	private static final String meanDelimit = "^";
 	private static final String dateDelimit = "/";
 	private JPanel wordPanel, statPanel, reviewPanel, dictPanel;
 	private JButton btnAdd, btnEdit, btnDelete, btnSearch, btnAddtoList, btnReviewAnswer, btnRemember, btnDontRemember,
-			btnPickWord, btnSAT, btnTOEFL, btnAddTOEFL, btnGRE;
+			btnPickWord, btnSAT, btnTOEFL, btnAddTOEFL, btnGRE, btnBackDict1, btnBackDict2;
 	private DefaultTableModel modelWord, modelExtWordList;
 	private BufferedWriter out;
 	private File wordFile = new File("words.txt");
@@ -36,7 +36,7 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 	private JTabbedPane tabbedPane;
 	private JScrollPane meaningTAScroll, answerTAScroll;
 	private Word wordReviewing;
-	private ArrayList<Word> wordList = new ArrayList<Word>(), reviseWordList = new ArrayList<Word>();
+	private ArrayList<Word> wordList = new ArrayList<Word>(), reviseWordList = new ArrayList<Word>(), toefl;
 	private int[] noOfWordsInLevel = new int[11];
 	String[] wordExtColumnTitle = { "Word", "Meaning", "Add Word" };
 
@@ -63,16 +63,15 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 		modelWord.setColumnIdentifiers(wordColumnTitle);
 		wordTable = new JTable(modelWord) {
 			private static final long serialVersionUID = 1L;
-
 			public boolean isCellEditable(int row, int column) {
 				return false;
 			};
 		};
-		wordTable.getColumnModel().getColumn(0).setMinWidth(0);
+		wordTable.getColumnModel().getColumn(0).setMinWidth(60);
 		wordTable.getColumnModel().getColumn(1).setMinWidth(100);
 		wordTable.getColumnModel().getColumn(2).setMinWidth(60);
 		// wordTable.getColumnModel().getColumn(3).setMinWidth(400);
-		wordTable.getColumnModel().getColumn(3).setMinWidth(510);
+		wordTable.getColumnModel().getColumn(3).setMinWidth(450);
 		wordTable.getColumnModel().getColumn(4).setMinWidth(60);
 		wordTable.getColumnModel().getColumn(5).setMinWidth(70);
 		wordTable.setPreferredScrollableViewportSize(new Dimension(800, 600));
@@ -133,7 +132,6 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 		// searchResultsTA.setEditable(false);
 		btnSearch = new JButton("Search");
 		btnSearch.addActionListener(this);
-		btnSearch.addKeyListener(this);
 		btnSearch.setFocusable(true);
 		btnSearch.setBackground(Color.CYAN);
 		btnAddtoList = new JButton("Add to word list");
@@ -224,7 +222,6 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 
 		setTitle("Vocabulary Builder");
 		add(tabbedPane);
-		addKeyListener(this);
 		setSize(900, 800);
 		setResizable(false);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -428,42 +425,12 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 			wordReviewing.dontRemember();
 			setNewWord();
 		} else if (e.getSource() == btnPickWord) {
-			// pick a word list panel
-			dictPanel.removeAll();
-			dictPanel.revalidate();
-			dictPanel.repaint();
-			dictPanel.setLayout(new BoxLayout(dictPanel, BoxLayout.PAGE_AXIS));
-			JLabel lblChooseList = new JLabel("Choose a list:");
-			lblChooseList.setAlignmentX(Component.CENTER_ALIGNMENT);
-			lblChooseList.setFont(new Font("Times new Roman", Font.TRUETYPE_FONT, 48));
-			btnSAT = new JButton("SAT");
-			btnSAT.setAlignmentX(Component.CENTER_ALIGNMENT);
-			btnSAT.setFont(new Font("Times new Roman", Font.PLAIN, 36));
-			btnSAT.setBackground(Color.GRAY);
-			btnSAT.addActionListener(this);
-			btnTOEFL = new JButton("TOEFL");
-			btnTOEFL.setAlignmentX(Component.CENTER_ALIGNMENT);
-			btnTOEFL.setFont(new Font("Times new Roman", Font.PLAIN, 36));
-			btnTOEFL.addActionListener(this);
-			btnTOEFL.setBackground(Color.GRAY);
-			btnGRE = new JButton("GRE");
-			btnGRE.setAlignmentX(Component.CENTER_ALIGNMENT);
-			btnGRE.setFont(new Font("Times new Roman", Font.PLAIN, 36));
-			btnGRE.addActionListener(this);
-			btnGRE.setBackground(Color.GRAY);
-
-			dictPanel.add(lblChooseList);
-			dictPanel.add(Box.createVerticalStrut(100));
-			dictPanel.add(btnSAT);
-			dictPanel.add(Box.createVerticalStrut(100));
-			dictPanel.add(btnTOEFL);
-			dictPanel.add(Box.createVerticalStrut(100));
-			dictPanel.add(btnGRE);
+			drawPickAWordListPanel();
 		} else if (e.getSource() == btnTOEFL) {
 			dictPanel.removeAll();
 			dictPanel.revalidate();
 			dictPanel.repaint();
-			dictPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 50, 0));
+			dictPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 50, 10));
 			JLabel lblTOEFL = new JLabel("TOEFL Word List");
 			lblTOEFL.setFont(new Font("Times new Roman", Font.TRUETYPE_FONT, 48));
 			lblTOEFL.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -471,7 +438,7 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 			btnAddTOEFL = new JButton("Add words to list");
 			btnAddTOEFL.addActionListener(this);
 			btnAddTOEFL.setBackground(Color.GREEN);
-			ArrayList<Word> toefl = getTOEFLList(new File("toefl.txt"));
+			toefl = getTOEFLList(new File("toefl.txt"));
 			modelExtWordList = new DefaultTableModel(0, wordExtColumnTitle.length);
 			modelExtWordList.setColumnIdentifiers(wordExtColumnTitle);
 			extList = new JTable(modelExtWordList) {
@@ -503,14 +470,41 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 			for (int i = 0; i < toefl.size(); i++) {
 				modelExtWordList.addRow(new Object[] { toefl.get(i).getName(), toefl.get(i).getMeaning(0), false });
 			}
-			extList.setPreferredScrollableViewportSize(new Dimension(800, 600));
+			extList.setPreferredScrollableViewportSize(new Dimension(800, 550));
 			extList.setFillsViewportHeight(true);
 			extList.setPreferredSize(null);
+			btnBackDict2 = new JButton("Back");
+			btnBackDict2.setAlignmentX(Component.CENTER_ALIGNMENT);
+			btnBackDict2.addActionListener(this);
+			btnBackDict2.setBackground(Color.white);
 
 			dictPanel.add(lblTOEFL);
 			dictPanel.add(btnAddTOEFL);
 			dictPanel.add(new JScrollPane(extList, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
 					JScrollPane.HORIZONTAL_SCROLLBAR_NEVER));
+			dictPanel.add(btnBackDict2);
+		}
+		else if (e.getSource() == btnAddTOEFL) {
+			for (int i = 0; i < toefl.size(); i++) {
+				if ((boolean) modelExtWordList.getValueAt(i, 2)) {
+					ArrayList <String> meaningList = new ArrayList<String>();
+					meaningList.add(modelExtWordList.getValueAt(i, 1).toString());
+					Word newTOEFLWord = new Word(id, modelExtWordList.getValueAt(i, 0).toString(), "", meaningList, 0, LocalDate.now(), LocalDate.MIN,
+							LocalDate.now().plusDays(1));
+					id++;
+					wordList.add(newTOEFLWord);
+				}
+				wordArrayToTable(wordList);
+				wordArrayToFile(wordList);
+				JOptionPane.showMessageDialog(null, "Words successfully added to list!", "Vocabulary Builder",
+						JOptionPane.INFORMATION_MESSAGE);
+			}
+		}
+		else if (e.getSource() == btnBackDict1) {
+			
+		}
+		else if (e.getSource() == btnBackDict2) {
+			drawPickAWordListPanel();
 		}
 	}
 
@@ -556,17 +550,6 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 		}
 	}
 
-	public void keyPressed(KeyEvent e) {
-		// press enter searches word
-	}
-
-	public void keyReleased(KeyEvent e) {
-	}
-
-	public void keyTyped(KeyEvent e) {
-
-	}
-
 	public void wordFileToArray(File f) {
 		if (f.exists()) {
 			try {
@@ -577,8 +560,7 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 				while (line != null) {
 					data = line.split("\\|");
 					ArrayList<String> meaningData = new ArrayList<String>(Arrays.asList(data[2].split("\\^")));
-					if (meaningData.size() == 1 && meaningData.get(0).length() == 0) { // no
-																						// meanings
+					if (meaningData.size() == 1 && meaningData.get(0).length() == 0) { // no meanings
 						meaningData = new ArrayList<String>();
 					}
 					String[] addDateArray = data[4].split(dateDelimit);
@@ -794,7 +776,7 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 				String line;
 				line = in.readLine();
 				while (line != null) {
-					String[] arrLine = line.split(":");
+					String[] arrLine = line.split(": ");
 					Word wordTOEFL = new Word(arrLine[0], arrLine[1]);
 					listTOEFL.add(wordTOEFL);
 					line = in.readLine();
@@ -805,5 +787,44 @@ public class Main extends JFrame implements ActionListener, ChangeListener, KeyL
 			}
 		}
 		return listTOEFL;
+	}
+	void drawPickAWordListPanel() {
+		// pick a word list panel
+					dictPanel.removeAll();
+					dictPanel.revalidate();
+					dictPanel.repaint();
+					dictPanel.setLayout(new BoxLayout(dictPanel, BoxLayout.PAGE_AXIS));
+					JLabel lblChooseList = new JLabel("Choose a list:");
+					lblChooseList.setAlignmentX(Component.CENTER_ALIGNMENT);
+					lblChooseList.setFont(new Font("Times new Roman", Font.TRUETYPE_FONT, 48));
+					btnSAT = new JButton("SAT");
+					btnSAT.setAlignmentX(Component.CENTER_ALIGNMENT);
+					btnSAT.setFont(new Font("Times new Roman", Font.PLAIN, 36));
+					btnSAT.setBackground(Color.GRAY);
+					btnSAT.addActionListener(this);
+					btnTOEFL = new JButton("TOEFL");
+					btnTOEFL.setAlignmentX(Component.CENTER_ALIGNMENT);
+					btnTOEFL.setFont(new Font("Times new Roman", Font.PLAIN, 36));
+					btnTOEFL.addActionListener(this);
+					btnTOEFL.setBackground(Color.GRAY);
+					btnGRE = new JButton("GRE");
+					btnGRE.setAlignmentX(Component.CENTER_ALIGNMENT);
+					btnGRE.setFont(new Font("Times new Roman", Font.PLAIN, 36));
+					btnGRE.addActionListener(this);
+					btnGRE.setBackground(Color.GRAY);
+					btnBackDict1 = new JButton("Back");
+					btnBackDict1.setAlignmentX(Component.CENTER_ALIGNMENT);
+					btnBackDict1.addActionListener(this);
+					btnBackDict1.setBackground(Color.white);
+
+					dictPanel.add(lblChooseList);
+					dictPanel.add(Box.createVerticalStrut(100));
+					dictPanel.add(btnSAT);
+					dictPanel.add(Box.createVerticalStrut(100));
+					dictPanel.add(btnTOEFL);
+					dictPanel.add(Box.createVerticalStrut(100));
+					dictPanel.add(btnGRE);
+					dictPanel.add(Box.createVerticalStrut(20));
+					dictPanel.add(btnBackDict1);
 	}
 }
