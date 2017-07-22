@@ -1,4 +1,3 @@
-Word|Part of Speech|Definitions, Other Forms, and Examples
 aberrant|adj.|deviating from normal or correct.
 abscond|v.|to leave secretly and hide, often to avoid the law.
 advocate|v., n.|to speak, plead, or argue for a cause, or in another’s behalf. (n) -- one who advocates.
@@ -56,7 +55,6 @@ effluent|adj., n|the quality of flowing out. something that flows out, such as a
 emollient|adj., n.|softening; something that softens
 emulate|v.|to strive to equal or excel (n: emulation)
 encomium|n.|a formal eulogy or speech of praise
-endemic|adj.|prevalent in or native to a certain region, locality, or people: "The disease was endemic to the region." Don't confuse this word with epidemic.
 enervate|v.|to weaken or destroy the strength or vitality of: "The heatenervated everyone." (adj: enervating)
 engender|v.|to give rise to, to propagate, to cause: "His slip of the toungue engendered much laughter."
 enigma|n.|puzzle; mystery: "Math is an enigma to me." (adj: enigmatic)
@@ -79,7 +77,6 @@ florid|adj.|flushed with a rosy color, as in complexion; very ornate and flowery
 floundering|adj.|struggling: "We tried to save the floundering business."
 garrulous|adj.|verbose; talkative; rambling: "We tried to avoid our garrulous neighbor."
 gossamer|n., adj.|fine cobweb on foliage; fine gauzy fabric; very fine: "She wore a gossamer robe."
-guile|n.|skillful deceit: "He was well known for his guile." (v. bequile; adj: beguiling. Note, however, that these two words have an additional meaning: to charm (v.) or charming (adj:), while the word guile does not generally have any such positive connotations)
 guileless|adj.|honest; straightforward (n: guilelessness)
 hapless|adj.|unfortunate
 headlong|adj., adv.|headfirst; impulsive; hasty. impulsively; hastily; without forethought: "They rushed headlong into marriage."
@@ -114,7 +111,6 @@ lugubrious|adj.|weighty, mournful, or gloomy, especially to an excessive degree:
 magnanimity|n.|generosity and nobility. (adj: magnanimous)
 malevolent|adj.|malicious; evil; having or showing ill will: "Some early American colonists saw the wilderness as malevolent and sought to control it."
 misanthrope|n.|one who hates people: "He was a true misanthrope and hated even himself."
-misnomer|n.|incorrect name or word for something
 misogynist|n.|one who hates women
 mitigate|v.|to make less forceful; to become more moderate; to make less harsh or undesirable: "He was trying to mitigate the damage he had done." (n: mitigation)
 nefarious|adj.|wicked, evil: "a nefarious plot."
@@ -149,7 +145,6 @@ rarefy|v.|to make or become thin; to purify or refine (n: rarefaction, adj: rare
 reproof|n.|the act of censuring, scolding, or rebuking. (v. reprove).
 rescind|v.|to repeal or annul
 sagacious|adj.|having a sharp or powerful intellect or discernment. (n: sagacity).
-sanguine|adj.|cheerful; confident: "Her sanguine attitude put everyone at ease."(Sangfroid (noun) is a related French word meaning unflappibility. Literally, it means cold blood)
 sate|v.|to satisfy fully or to excess
 saturnine|adj.|having a gloomy or morose temperament
 savant|n.|a very knowledgable person; a genious

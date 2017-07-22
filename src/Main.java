@@ -17,29 +17,31 @@ import java.awt.*;
 
 public class Main extends JFrame implements ActionListener, ChangeListener {
 	private static final long serialVersionUID = 1L;
-	private static final String fieldDelimit = "|";
-	private static final String meanDelimit = "^";
-	private static final String dateDelimit = "/";
-	private JPanel wordPanel, statPanel, reviewPanel, dictPanel;
+	private static final String delimitField = "|", delimitMean = "^", delimitDate = "/";
+	private ArrayList<String> meaningSearch;
+	private ArrayList<Word> alWord = new ArrayList<Word>(), alRevise = new ArrayList<Word>(), alTOEFL, alGRE;
+	private BufferedWriter out;
+	private DefaultTableModel modelWord, modelExtWordList;
+	private File fileWord = new File("words.txt");
+	private Font fontTitle = new Font("Times new Roman", Font.TRUETYPE_FONT, 48),
+			fontLargeBtn = new Font("Times new Roman", Font.BOLD, 36),
+			fontBody = new Font("Times new Roman", Font.PLAIN, 24),
+			fontReviewWord = new Font("Times new Roman", Font.BOLD, 72);
+	private int readFileIndex = 0, id = 0, reviseIndex = 0;
+	private int[] noOfWordsInLevel = new int[11];
 	private JButton btnAdd, btnEdit, btnDelete, btnSearch, btnAddtoList, btnReviewAnswer, btnRemember, btnDontRemember,
 			btnPickWord, btnSAT, btnTOEFL, btnAddTOEFL, btnGRE, btnAddGRE, btnBackDict1, btnBackDict2;
-	private DefaultTableModel modelWord, modelExtWordList;
-	private BufferedWriter out;
-	private File wordFile = new File("words.txt");
-	private String wordSearch;
-	private ArrayList<String> meaningSearch;
-	private int readFileIndex = 0, id = 0, reviseIndex = 0;
-	private JTable wordTable, extList;
-	private JTextField wordTF, phoneticSymTF, wordSearchTF;
-	private JTextArea meaningTA, searchResultsTA, answerTA, statTA;
-	private JLabel wordReview, lblNoOfWordsRemaining, dictionaryLabel, orLabel;
+	private JLabel lblWordReview, lblNoOfWordsRemaining, lblTypeWord, lblOr;
+	private JPanel panelWordList, panelStat, panelReview, panelAddWord;
+	private JScrollPane spTAMeaning, spTAAnswer;
 	private JTabbedPane tabbedPane;
-	private JScrollPane meaningTAScroll, answerTAScroll;
-	private Word wordReviewing;
-	private ArrayList<Word> wordList = new ArrayList<Word>(), reviseWordList = new ArrayList<Word>(), toefl, gre;
-	private int[] noOfWordsInLevel = new int[11];
+	private JTable tableWord, tableExtList;
+	private JTextArea taMeaning, taSearchResults, taAnswer, taStat;
+	private JTextField tfWord, tfPhoneticSym, tfWordSearch;
+	private String wordSearch;
 	private String[] toeflColTitle = { "Word", "Meaning", "Add Word" },
 			greColTitle = { "Word", "<html>Phonetic<br>Symbol", "Meaning", "Add Word" };
+	private Word wordReviewing;
 
 	public static void main(String[] args) {
 		new Main();
@@ -49,50 +51,49 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 		// main panels
 		tabbedPane = new JTabbedPane();
 		tabbedPane.addChangeListener(this);
-		wordPanel = new JPanel();
-		wordPanel.setPreferredSize(new Dimension(500, 400));
-		statPanel = new JPanel();
-		reviewPanel = new JPanel();
-		reviewPanel.setLayout(null);
-		dictPanel = new JPanel();
+		panelWordList = new JPanel();
+		panelStat = new JPanel();
+		panelReview = new JPanel();
+		panelReview.setLayout(null);
+		panelAddWord = new JPanel();
 
-		// word panel JComponents
+		// Word List panel JComponents
 		// JTable
 		String[] wordColumnTitle = { "", "Word", "<html>Phonetic<br> Symbol", "Meaning", "Progress",
 				"<html>Date <br>Added" };
 		modelWord = new DefaultTableModel(100, wordColumnTitle.length);
 		modelWord.setColumnIdentifiers(wordColumnTitle);
-		wordTable = new JTable(modelWord) {
+		tableWord = new JTable(modelWord) {
 			private static final long serialVersionUID = 1L;
 
 			public boolean isCellEditable(int row, int column) {
 				return false;
 			};
 		};
-		wordTable.getColumnModel().getColumn(0).setMinWidth(60);
-		wordTable.getColumnModel().getColumn(1).setMinWidth(100);
-		wordTable.getColumnModel().getColumn(2).setMinWidth(60);
-		// wordTable.getColumnModel().getColumn(3).setMinWidth(400);
-		wordTable.getColumnModel().getColumn(3).setMinWidth(450);
-		wordTable.getColumnModel().getColumn(4).setMinWidth(60);
-		wordTable.getColumnModel().getColumn(5).setMinWidth(70);
-		wordTable.setPreferredScrollableViewportSize(new Dimension(800, 600));
-		wordTable.setFillsViewportHeight(true);
-		wordTable.setPreferredSize(null);
-		wordFileToArray(wordFile);
-		wordArrayToTable(wordList);
+		tableWord.getColumnModel().getColumn(0).setMinWidth(60);
+		tableWord.getColumnModel().getColumn(1).setMinWidth(100);
+		tableWord.getColumnModel().getColumn(2).setMinWidth(60);
+		tableWord.getColumnModel().getColumn(3).setMinWidth(450);
+		tableWord.getColumnModel().getColumn(4).setMinWidth(60);
+		tableWord.getColumnModel().getColumn(5).setMinWidth(70);
+		tableWord.setPreferredScrollableViewportSize(new Dimension(800, 600));
+		tableWord.setFillsViewportHeight(true);
+		tableWord.setPreferredSize(null);
+		wordFileToArray(fileWord);
+		wordArrayToTable(alWord);
 
 		// set header height
-		JTableHeader header = wordTable.getTableHeader();
+		JTableHeader header = tableWord.getTableHeader();
 		header.setPreferredSize(new Dimension(100, 40));
 
-		wordTF = new JTextField(15);
-		phoneticSymTF = new JTextField(15);
-		meaningTA = new JTextArea(3, 3);
-		meaningTA.setLineWrap(true);
-		meaningTA.setWrapStyleWord(true);
-		meaningTAScroll = new JScrollPane(meaningTA);
-		meaningTAScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+		// Add/Edit/Delete JOptionPane components
+		tfWord = new JTextField(15);
+		tfPhoneticSym = new JTextField(15);
+		taMeaning = new JTextArea(3, 3);
+		taMeaning.setLineWrap(true);
+		taMeaning.setWrapStyleWord(true);
+		spTAMeaning = new JScrollPane(taMeaning);
+		spTAMeaning.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
 
 		btnAdd = new JButton("Add");
 		btnAdd.setFocusable(false);
@@ -108,29 +109,29 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 		btnDelete.setBackground(Color.RED);
 
 		// Statistics panel JComponents
-		JLabel statLabel = new JLabel("STATISTICS");
-		statLabel.setFont(new Font("Times new Roman", Font.BOLD, 72));
-		statLabel.setAlignmentX(CENTER_ALIGNMENT);
-		statTA = new JTextArea(20, 45);
-		statTA.setEditable(false);
-		statTA.setFont(new Font("Times new Roman", Font.PLAIN, 24));
+		JLabel lblStatistics = new JLabel("Statistics");
+		lblStatistics.setFont(fontTitle);
+		lblStatistics.setAlignmentX(CENTER_ALIGNMENT);
+		taStat = new JTextArea(20, 45);
+		taStat.setEditable(false);
+		taStat.setFont(fontBody);
 
 		// Dictionary panel JComponents
-		dictionaryLabel = new JLabel("Type the word and press Search");
-		dictionaryLabel.setFont(new Font("Times new Roman", Font.TRUETYPE_FONT, 48));
-		dictionaryLabel.setAlignmentX(CENTER_ALIGNMENT);
-		wordSearchTF = new JTextField(30);
-		wordSearchTF.setMinimumSize(new Dimension(600, 50));
-		wordSearchTF.setPreferredSize(new Dimension(600, 50));
-		wordSearchTF.setFont(new Font("Times new Roman", Font.PLAIN, 30));
-		wordSearchTF.setAlignmentX(CENTER_ALIGNMENT);
-		searchResultsTA = new JTextArea();
-		searchResultsTA.setFont(new Font("Times new Roman", Font.PLAIN, 24));
-		searchResultsTA.setPreferredSize(new Dimension(750, 300));
-		searchResultsTA.setMaximumSize(new Dimension(700, 300));
-		searchResultsTA.setLineWrap(true);
-		searchResultsTA.setWrapStyleWord(true);
-		searchResultsTA.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+		lblTypeWord = new JLabel("Type the word and press Search");
+		lblTypeWord.setFont(fontTitle);
+		lblTypeWord.setAlignmentX(CENTER_ALIGNMENT);
+		tfWordSearch = new JTextField(30);
+		tfWordSearch.setMinimumSize(new Dimension(600, 50));
+		tfWordSearch.setPreferredSize(new Dimension(600, 50));
+		tfWordSearch.setFont(new Font("Times new Roman", Font.PLAIN, 30));
+		tfWordSearch.setAlignmentX(CENTER_ALIGNMENT);
+		taSearchResults = new JTextArea();
+		taSearchResults.setFont(fontBody);
+		taSearchResults.setPreferredSize(new Dimension(750, 300));
+		taSearchResults.setMaximumSize(new Dimension(700, 300));
+		taSearchResults.setLineWrap(true);
+		taSearchResults.setWrapStyleWord(true);
+		taSearchResults.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 		// searchResultsTA.setEditable(false);
 		btnSearch = new JButton("Search");
 		btnSearch.addActionListener(this);
@@ -141,86 +142,86 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 		btnAddtoList.addActionListener(this);
 		btnAddtoList.setEnabled(false);
 		btnAddtoList.setBackground(Color.GREEN);
-		orLabel = new JLabel("or");
-		orLabel.setPreferredSize(new Dimension(200, 200));
-		orLabel.setFont(new Font("Times new Roman", Font.TRUETYPE_FONT, 48));
+		lblOr = new JLabel("or");
+		lblOr.setPreferredSize(new Dimension(200, 200));
+		lblOr.setFont(fontTitle);
 		btnPickWord = new JButton("<html>Pick word<br>from list");
 		btnPickWord.setPreferredSize(new Dimension(100, 100));
 		btnPickWord.addActionListener(this);
 		btnPickWord.setBackground(Color.CYAN);
 
 		// Review panel JComponents
-		JLabel reviewQ = new JLabel("What is the meaning of this word?");
-		reviewQ.setFont(new Font("Times new Roman", Font.PLAIN, 56));
-		reviewQ.setBounds(50, 0, 900, 60);
+		JLabel lblWhatMeaning = new JLabel("What is the meaning of this word?");
+		lblWhatMeaning.setFont(fontTitle);
+		lblWhatMeaning.setBounds(150, 50, 900, 60);
 		lblNoOfWordsRemaining = new JLabel("0");
 		lblNoOfWordsRemaining.setBounds(850, 0, 50, 30);
-		wordReview = new JLabel("");
-		wordReview.setFont(new Font("Times new Roman", Font.BOLD, 72));
-		wordReview.setHorizontalAlignment(JLabel.CENTER);
-		wordReview.setBounds(0, 70, 900, 100);
+		lblWordReview = new JLabel("");
+		lblWordReview.setFont(fontReviewWord);
+		lblWordReview.setHorizontalAlignment(JLabel.CENTER);
+		lblWordReview.setBounds(0, 70, 900, 100);
 		btnReviewAnswer = new JButton("Show Meaning");
-		btnReviewAnswer.setFont(new Font("Times new Roman", Font.BOLD, 72));
+		btnReviewAnswer.setFont(fontReviewWord);
 		btnReviewAnswer.setPreferredSize(new Dimension(800, 400));
 		btnReviewAnswer.setBounds(50, 180, 800, 400);
 		btnReviewAnswer.addActionListener(this);
 		btnReviewAnswer.setBackground(Color.CYAN);
-		if (reviseWordList.size() == 0) {
+		if (alRevise.size() == 0) {
 			btnReviewAnswer.setEnabled(false);
 		}
-		answerTA = new JTextArea();
-		answerTA.setFont(new Font("Times new Roman", Font.PLAIN, 24));
-		answerTA.setWrapStyleWord(true);
-		answerTA.setLineWrap(true);
-		answerTA.setEditable(false);
-		answerTAScroll = new JScrollPane(answerTA);
-		answerTAScroll.setBounds(50, 180, 800, 400);
-		answerTAScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+		taAnswer = new JTextArea();
+		taAnswer.setFont(fontBody);
+		taAnswer.setWrapStyleWord(true);
+		taAnswer.setLineWrap(true);
+		taAnswer.setEditable(false);
+		spTAAnswer = new JScrollPane(taAnswer);
+		spTAAnswer.setBounds(50, 180, 800, 400);
+		spTAAnswer.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
 		btnRemember = new JButton("I Remember");
 		btnRemember.setBackground(Color.GREEN);
-		btnRemember.setFont(new Font("Times new Roman", Font.PLAIN, 36));
+		btnRemember.setFont(fontLargeBtn);
 		btnRemember.setBounds(50, 600, 380, 100);
 		btnRemember.setEnabled(false);
 		btnRemember.addActionListener(this);
 		btnDontRemember = new JButton("I Don't Remember");
 		btnDontRemember.setBackground(Color.RED);
-		btnDontRemember.setFont(new Font("Times new Roman", Font.PLAIN, 36));
+		btnDontRemember.setFont(fontLargeBtn);
 		btnDontRemember.setBounds(470, 600, 380, 100);
 		btnDontRemember.setEnabled(false);
 		btnDontRemember.addActionListener(this);
-		if (reviseWordList.size() > 0) {
-			wordReviewing = reviseWordList.get(reviseIndex);
-			wordReview.setText(reviseWordList.get(reviseIndex).getName());
-			answerTA.setText(reviseWordList.get(reviseIndex).getMeaning());
+		if (alRevise.size() > 0) {
+			wordReviewing = alRevise.get(reviseIndex);
+			lblWordReview.setText(alRevise.get(reviseIndex).getName());
+			taAnswer.setText(alRevise.get(reviseIndex).getMeaning());
 		}
 
-		wordPanel.add(btnAdd);
-		wordPanel.add(btnEdit);
-		wordPanel.add(btnDelete);
-		wordPanel.add(new JScrollPane(wordTable, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
+		panelWordList.add(btnAdd);
+		panelWordList.add(btnEdit);
+		panelWordList.add(btnDelete);
+		panelWordList.add(new JScrollPane(tableWord, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
 				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER));
-		statPanel.add(statLabel);
-		statPanel.add(statTA);
-		dictPanel.add(dictionaryLabel);
-		dictPanel.add(Box.createVerticalStrut(20));
-		dictPanel.add(wordSearchTF);
-		dictPanel.add(btnSearch);
-		dictPanel.add(btnAddtoList);
-		dictPanel.add(Box.createVerticalStrut(20));
-		dictPanel.add(searchResultsTA);
-		dictPanel.add(orLabel);
-		dictPanel.add(btnPickWord);
-		reviewPanel.add(reviewQ);
-		reviewPanel.add(lblNoOfWordsRemaining);
-		reviewPanel.add(wordReview);
-		reviewPanel.add(btnReviewAnswer);
-		reviewPanel.add(answerTAScroll);
-		reviewPanel.add(btnRemember);
-		reviewPanel.add(btnDontRemember);
-		tabbedPane.addTab("Word List", wordPanel);
-		tabbedPane.addTab("Add Word", dictPanel);
-		tabbedPane.addTab("Stats", statPanel);
-		tabbedPane.addTab("Review", reviewPanel);
+		panelStat.add(lblStatistics);
+		panelStat.add(taStat);
+		panelAddWord.add(lblTypeWord);
+		panelAddWord.add(Box.createVerticalStrut(20));
+		panelAddWord.add(tfWordSearch);
+		panelAddWord.add(btnSearch);
+		panelAddWord.add(btnAddtoList);
+		panelAddWord.add(Box.createVerticalStrut(20));
+		panelAddWord.add(taSearchResults);
+		panelAddWord.add(lblOr);
+		panelAddWord.add(btnPickWord);
+		panelReview.add(lblWhatMeaning);
+		panelReview.add(lblNoOfWordsRemaining);
+		panelReview.add(lblWordReview);
+		panelReview.add(btnReviewAnswer);
+		panelReview.add(spTAAnswer);
+		panelReview.add(btnRemember);
+		panelReview.add(btnDontRemember);
+		tabbedPane.addTab("Word List", panelWordList);
+		tabbedPane.addTab("Add Word", panelAddWord);
+		tabbedPane.addTab("Stats", panelStat);
+		tabbedPane.addTab("Review", panelReview);
 
 		setTitle("Vocabulary Builder");
 		add(tabbedPane);
@@ -232,7 +233,7 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == btnAdd) {
-			readFileIndex = wordTable.getSelectedRow();
+			readFileIndex = tableWord.getSelectedRow();
 			int optionWM = 1;
 			if (readFileIndex >= 0 && modelWord.getValueAt(readFileIndex, 0) != null) {
 				Object[] addOptions = { "Add Meaning", "Add Word" };
@@ -241,48 +242,46 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 			}
 
 			if (optionWM == 0) { // add meaning
-				String[] arrId = String.valueOf(modelWord.getValueAt(readFileIndex, 0)).split("\\" + fieldDelimit);
+				String[] arrId = String.valueOf(modelWord.getValueAt(readFileIndex, 0)).split("\\" + delimitField);
 				int wordId = Integer.parseInt(arrId[0]);
-				wordTF.setEnabled(false);
-				wordTF.setText(wordList.get(wordId).getName());
-				phoneticSymTF.setEnabled(false);
-				phoneticSymTF.setText(wordList.get(wordId).getPhonetic());
-				meaningTA.setText("");
+				tfWord.setEnabled(false);
+				tfWord.setText(alWord.get(wordId).getName());
+				tfPhoneticSym.setEnabled(false);
+				tfPhoneticSym.setText(alWord.get(wordId).getPhonetic());
+				taMeaning.setText("");
 				Border border = BorderFactory.createLineBorder(Color.BLACK);
-				meaningTA.setBorder(
+				taMeaning.setBorder(
 						BorderFactory.createCompoundBorder(border, BorderFactory.createEmptyBorder(10, 10, 10, 10)));
-				Object[] addingWords = { "Word:", wordTF, "Phonetic symbol", phoneticSymTF, "Meaning:",
-						meaningTAScroll };
+				Object[] addingWords = { "Word:", tfWord, "Phonetic symbol", tfPhoneticSym, "Meaning:", spTAMeaning };
 				int optionAdd = JOptionPane.showConfirmDialog(null, addingWords, "Add a word",
 						JOptionPane.OK_CANCEL_OPTION);
-				String[] meaning = meaningTA.getText().split("\n");
+				String[] meaning = taMeaning.getText().split("\n");
 				if (optionAdd == 0) {
 					if (meaning.length == 0) {
 						JOptionPane.showMessageDialog(null, "You did not input meaning!", "Vocabulary Builder",
 								JOptionPane.ERROR_MESSAGE);
 					} else {
-						wordList.get(wordId).addMeaning(meaning);
-						wordArrayToTable(wordList);
-						wordArrayToFile(wordList);
+						alWord.get(wordId).addMeaning(meaning);
+						wordArrayToTable(alWord);
+						wordArrayToFile(alWord);
 					}
 				}
 			} else if (optionWM == 1) { // add word
-				wordTF.setEnabled(true);
-				wordTF.setText("");
-				phoneticSymTF.setText("");
-				meaningTA.setText("");
+				tfWord.setEnabled(true);
+				tfWord.setText("");
+				tfPhoneticSym.setText("");
+				taMeaning.setText("");
 				Border border = BorderFactory.createLineBorder(Color.BLACK);
-				meaningTA.setBorder(
+				taMeaning.setBorder(
 						BorderFactory.createCompoundBorder(border, BorderFactory.createEmptyBorder(10, 10, 10, 10)));
-				Object[] addingWords = { "Word:", wordTF, "Phonetic symbol", phoneticSymTF, "Meaning:",
-						meaningTAScroll };
+				Object[] addingWords = { "Word:", tfWord, "Phonetic symbol", tfPhoneticSym, "Meaning:", spTAMeaning };
 				int optionAdd = JOptionPane.showConfirmDialog(null, addingWords, "Add a word",
 						JOptionPane.OK_CANCEL_OPTION);
-				String strWord = wordTF.getText();
-				String phoneticSymbol = phoneticSymTF.getText();
-				String[] meaning = meaningTA.getText().split("\n");
+				String strWord = tfWord.getText();
+				String phoneticSymbol = tfPhoneticSym.getText();
+				String[] meaning = taMeaning.getText().split("\n");
 				ArrayList<String> meaningArrayList = new ArrayList<String>(
-						Arrays.asList(meaningTA.getText().split("\n")));
+						Arrays.asList(taMeaning.getText().split("\n")));
 				if (optionAdd == 0) {
 					if (strWord.length() == 0 || meaning.length == 0) {
 						JOptionPane.showMessageDialog(null, "You did not input word/meaning!", "Vocabulary Builder",
@@ -291,53 +290,53 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 						Word newWord = new Word(id, strWord, phoneticSymbol, meaningArrayList, 0, LocalDate.now(),
 								LocalDate.MIN, LocalDate.now().plusDays(1));
 						id++;
-						wordList.add(newWord);
-						wordArrayToTable(wordList);
-						wordArrayToFile(wordList);
+						alWord.add(newWord);
+						wordArrayToTable(alWord);
+						wordArrayToFile(alWord);
 					}
 				}
 			}
 
 		} else if (e.getSource() == btnEdit) {
-			readFileIndex = wordTable.getSelectedRow();
+			readFileIndex = tableWord.getSelectedRow();
 			if (readFileIndex >= 0 && modelWord.getValueAt(readFileIndex, 0) != null) {
-				String[] arrId = String.valueOf(modelWord.getValueAt(readFileIndex, 0)).split("\\" + fieldDelimit);
+				String[] arrId = String.valueOf(modelWord.getValueAt(readFileIndex, 0)).split("\\" + delimitField);
 				int wordId = Integer.parseInt(arrId[0]);
 				int meaningId = Integer.parseInt(arrId[1]);
-				String oldMeaning = wordList.get(wordId).getMeaning(meaningId);
-				wordTF.setEnabled(true);
-				wordTF.setText(wordList.get(wordId).getName());
-				phoneticSymTF.setEnabled(true);
+				String oldMeaning = alWord.get(wordId).getMeaning(meaningId);
+				tfWord.setEnabled(true);
+				tfWord.setText(alWord.get(wordId).getName());
+				tfPhoneticSym.setEnabled(true);
 				if (modelWord.getValueAt(readFileIndex, 1) != null) {
-					phoneticSymTF.setText(wordList.get(wordId).getPhonetic());
+					tfPhoneticSym.setText(alWord.get(wordId).getPhonetic());
 				} else {
-					phoneticSymTF.setText("");
+					tfPhoneticSym.setText("");
 				}
-				meaningTA.setText(oldMeaning);
+				taMeaning.setText(oldMeaning);
 				Border border = BorderFactory.createLineBorder(Color.BLACK);
-				meaningTA.setBorder(
+				taMeaning.setBorder(
 						BorderFactory.createCompoundBorder(border, BorderFactory.createEmptyBorder(10, 10, 10, 10)));
-				Object[] addingWords = { "Word:", wordTF, "Phonetic symbol", phoneticSymTF, "Meaning:",
-						meaningTAScroll };
+				Object[] addingWords = { "Word:", tfWord, "Phonetic symbol", tfPhoneticSym, "Meaning:", spTAMeaning };
 				int option = JOptionPane.showConfirmDialog(null, addingWords, "Edit a word",
 						JOptionPane.OK_CANCEL_OPTION);
-				String newWord = wordTF.getText();
-				String newPhoneticSymbol = phoneticSymTF.getText();
-				String newMeaning = meaningTA.getText();
+				String newWord = tfWord.getText();
+				String newPhoneticSymbol = tfPhoneticSym.getText();
+				String newMeaning = taMeaning.getText();
+
 				if (option == 0) {
 					if (newWord.length() == 0 || newMeaning.length() == 0) {
 						JOptionPane.showMessageDialog(null, "You did not input word/meaning!", "Vocabulary Builder",
 								JOptionPane.ERROR_MESSAGE);
 					} else if (newMeaning.indexOf("\n") != -1) {
 						JOptionPane.showMessageDialog(null,
-								"Please edit one meaning at a time (i.e. do not use 'enter'", "Vocabulary Builder",
+								"Please edit one meaning at a time (i.e. do not use 'enter')", "Vocabulary Builder",
 								JOptionPane.ERROR_MESSAGE);
 					} else {
-						wordList.get(wordId).setName(newWord);
-						wordList.get(wordId).setPhonetic(newPhoneticSymbol);
-						wordList.get(wordId).setMeaning(newMeaning, meaningId);
-						wordArrayToTable(wordList);
-						wordArrayToFile(wordList);
+						alWord.get(wordId).setName(newWord);
+						alWord.get(wordId).setPhonetic(newPhoneticSymbol);
+						alWord.get(wordId).setMeaning(newMeaning, meaningId);
+						wordArrayToTable(alWord);
+						wordArrayToFile(alWord);
 					}
 				}
 			} else {
@@ -345,38 +344,34 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 						JOptionPane.ERROR_MESSAGE);
 			}
 		} else if (e.getSource() == btnDelete) {
-			readFileIndex = wordTable.getSelectedRow();
+			readFileIndex = tableWord.getSelectedRow();
 			if (readFileIndex >= 0 && modelWord.getValueAt(readFileIndex, 0) != null) {
 				Object[] deleteOptions = { "Delete Meaning", "Delete Word" };
 				int option = JOptionPane.showOptionDialog(null, "Delete meaning or word?", "Vocabulary Builder",
 						JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, deleteOptions, null);
-				String[] arrId = String.valueOf(modelWord.getValueAt(readFileIndex, 0)).split("\\" + fieldDelimit);
+				String[] arrId = String.valueOf(modelWord.getValueAt(readFileIndex, 0)).split("\\" + delimitField);
 				int wordId = Integer.parseInt(arrId[0]);
 
 				if (option == 1) { // delete word
-					if (reviseWordList.remove(wordList.get(wordId))) {
-						if (wordReviewing.equals(wordList.get(wordId))) {
+					if (alRevise.remove(alWord.get(wordId))) {
+						if (wordReviewing.equals(alWord.get(wordId))) {
 							setNewWord();
 						}
 					}
-					for (int i = 0; i < reviseWordList.size(); i++) {
-					}
-					// if (wordReviewing.getId() == wor) Deleting a word that is
-					// in review word list
-					wordList.get(wordId).delete();
+					alWord.get(wordId).delete();
 					clearTableModel(modelWord);
-					wordArrayToTable(wordList);
-					wordArrayToFile(wordList);
+					wordArrayToTable(alWord);
+					wordArrayToFile(alWord);
 				} else if (option == 0) {
 					int meaningId = Integer.parseInt(arrId[1]);
-					if (meaningId == 0 && wordList.get(wordId).getNumMeaning() == 1) {
+					if (meaningId == 0 && alWord.get(wordId).getNumMeaning() == 1) {
 						JOptionPane.showMessageDialog(null, "Every word must have at least 1 meaning.",
 								"Vocabulary Builder", JOptionPane.ERROR_MESSAGE);
 					} else {
-						wordList.get(wordId).removeMeaning(meaningId);
+						alWord.get(wordId).removeMeaning(meaningId);
 						clearTableModel(modelWord);
-						wordArrayToTable(wordList);
-						wordArrayToFile(wordList);
+						wordArrayToTable(alWord);
+						wordArrayToFile(alWord);
 					}
 				}
 			} else {
@@ -384,31 +379,27 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 						JOptionPane.ERROR_MESSAGE);
 			}
 		} else if (e.getSource() == btnSearch) {
-			searchResultsTA.setText("");
+			taSearchResults.setText("");
 			meaningSearch = new ArrayList<String>();
 			btnAddtoList.setEnabled(true);
-			wordSearch = "";
-			wordSearch = wordSearchTF.getText();
-
+			wordSearch = tfWordSearch.getText();
 			meaningSearch = searchWord(wordSearch, "oxford");
-
 			if (meaningSearch != null) {
 				for (int i = 0; i < meaningSearch.size(); i++) {
-					searchResultsTA.append(i + 1 + ". " + meaningSearch.get(i) + "\n");
+					taSearchResults.append(i + 1 + ". " + meaningSearch.get(i) + "\n");
 				}
 			}
 		} else if (e.getSource() == btnAddtoList) {
-			if (searchResultsTA.getText().equals("") || wordSearch.length() == 0) {
+			if (taSearchResults.getText().equals("") || wordSearch.length() == 0) {
 				JOptionPane.showMessageDialog(null, "Word cannot be added, since word/and or meaning is empty",
 						"Vocabulary Builder", JOptionPane.ERROR_MESSAGE);
 			} else {
-
 				Word newWord = new Word(id, wordSearch, "", meaningSearch, 0, LocalDate.now(), LocalDate.MIN,
 						LocalDate.now().plusDays(1));
 				id++;
-				wordList.add(newWord);
-				wordArrayToTable(wordList);
-				wordArrayToFile(wordList);
+				alWord.add(newWord);
+				wordArrayToTable(alWord);
+				wordArrayToFile(alWord);
 				JOptionPane.showMessageDialog(null, wordSearch + " successfully added to list!", "Vocabulary Builder",
 						JOptionPane.INFORMATION_MESSAGE);
 				btnAddtoList.setEnabled(false);
@@ -418,31 +409,31 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 			btnRemember.setEnabled(true);
 			btnDontRemember.setEnabled(true);
 		} else if (e.getSource() == btnRemember) {
-			if (reviseWordList.remove(wordReviewing)) {
+			if (alRevise.remove(wordReviewing)) {
 				increaseWordLevel(wordReviewing.getId());
 			}
-			lblNoOfWordsRemaining.setText(String.valueOf(reviseWordList.size()));
+			lblNoOfWordsRemaining.setText(String.valueOf(alRevise.size()));
 			setNewWord();
 		} else if (e.getSource() == btnDontRemember) {
 			wordReviewing.dontRemember();
 			setNewWord();
-		} else if (e.getSource() == btnPickWord) {
+		} else if (e.getSource() == btnPickWord || e.getSource() == btnBackDict2) {
 			drawPickAWordListPanel();
 		} else if (e.getSource() == btnTOEFL) {
-			dictPanel.removeAll();
-			dictPanel.revalidate();
-			dictPanel.repaint();
-			dictPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 50, 10));
+			panelAddWord.removeAll();
+			panelAddWord.revalidate();
+			panelAddWord.repaint();
+			panelAddWord.setLayout(new FlowLayout(FlowLayout.CENTER, 50, 10));
 			JLabel lblTOEFL = new JLabel("TOEFL Word List");
 			lblTOEFL.setFont(new Font("Times new Roman", Font.TRUETYPE_FONT, 48));
 			lblTOEFL.setAlignmentX(Component.CENTER_ALIGNMENT);
 			btnAddTOEFL = new JButton("Add words to list");
 			btnAddTOEFL.addActionListener(this);
 			btnAddTOEFL.setBackground(Color.GREEN);
-			toefl = getTOEFLList(new File("toefl.txt"));
+			alTOEFL = getTOEFLList(new File("toefl.txt"));
 			modelExtWordList = new DefaultTableModel(0, toeflColTitle.length);
 			modelExtWordList.setColumnIdentifiers(toeflColTitle);
-			extList = new JTable(modelExtWordList) {
+			tableExtList = new JTable(modelExtWordList) {
 				private static final long serialVersionUID = 1L;
 
 				public boolean isCellEditable(int row, int column) {
@@ -465,40 +456,40 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 					}
 				}
 			};
-			extList.getColumnModel().getColumn(0).setMinWidth(100);
-			extList.getColumnModel().getColumn(1).setMinWidth(600);
-			extList.getColumnModel().getColumn(2).setMinWidth(100);
-			for (int i = 0; i < toefl.size(); i++) {
-				modelExtWordList.addRow(new Object[] { toefl.get(i).getName(), toefl.get(i).getMeaning(0), false });
+			tableExtList.getColumnModel().getColumn(0).setMinWidth(100);
+			tableExtList.getColumnModel().getColumn(1).setMinWidth(600);
+			tableExtList.getColumnModel().getColumn(2).setMinWidth(100);
+			for (int i = 0; i < alTOEFL.size(); i++) {
+				modelExtWordList.addRow(new Object[] { alTOEFL.get(i).getName(), alTOEFL.get(i).getMeaning(0), false });
 			}
-			extList.setPreferredScrollableViewportSize(new Dimension(800, 550));
-			extList.setFillsViewportHeight(true);
-			extList.setPreferredSize(null);
+			tableExtList.setPreferredScrollableViewportSize(new Dimension(800, 550));
+			tableExtList.setFillsViewportHeight(true);
+			tableExtList.setPreferredSize(null);
 			btnBackDict2 = new JButton("Back");
 			btnBackDict2.setAlignmentX(Component.CENTER_ALIGNMENT);
 			btnBackDict2.addActionListener(this);
 			btnBackDict2.setBackground(Color.white);
 
-			dictPanel.add(lblTOEFL);
-			dictPanel.add(btnAddTOEFL);
-			dictPanel.add(new JScrollPane(extList, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
+			panelAddWord.add(lblTOEFL);
+			panelAddWord.add(btnAddTOEFL);
+			panelAddWord.add(new JScrollPane(tableExtList, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
 					JScrollPane.HORIZONTAL_SCROLLBAR_NEVER));
-			dictPanel.add(btnBackDict2);
+			panelAddWord.add(btnBackDict2);
 		} else if (e.getSource() == btnGRE) {
-			dictPanel.removeAll();
-			dictPanel.revalidate();
-			dictPanel.repaint();
-			dictPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 50, 10));
+			panelAddWord.removeAll();
+			panelAddWord.revalidate();
+			panelAddWord.repaint();
+			panelAddWord.setLayout(new FlowLayout(FlowLayout.CENTER, 50, 10));
 			JLabel lblGRE = new JLabel("GRE Word List");
 			lblGRE.setFont(new Font("Times new Roman", Font.TRUETYPE_FONT, 48));
 			lblGRE.setAlignmentX(Component.CENTER_ALIGNMENT);
 			btnAddGRE = new JButton("Add words to list");
 			btnAddGRE.addActionListener(this);
 			btnAddGRE.setBackground(Color.GREEN);
-			gre = getGREList(new File("gre.txt"));
+			alGRE = getGREList(new File("gre.txt"));
 			modelExtWordList = new DefaultTableModel(0, greColTitle.length);
 			modelExtWordList.setColumnIdentifiers(greColTitle);
-			extList = new JTable(modelExtWordList) {
+			tableExtList = new JTable(modelExtWordList) {
 				private static final long serialVersionUID = 1L;
 
 				public boolean isCellEditable(int row, int column) {
@@ -523,99 +514,121 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 					}
 				}
 			};
-			extList.getColumnModel().getColumn(0).setMinWidth(100);
-			extList.getColumnModel().getColumn(1).setMinWidth(100);
-			extList.getColumnModel().getColumn(2).setMinWidth(500);
-			extList.getColumnModel().getColumn(3).setMinWidth(100);
-			for (int i = 0; i < gre.size(); i++) {
-				modelExtWordList.addRow(new Object[] { gre.get(i).getName(), gre.get(i).getPhonetic(), gre.get(i).getMeaning(0), false });
+			tableExtList.getColumnModel().getColumn(0).setMinWidth(100);
+			tableExtList.getColumnModel().getColumn(1).setMinWidth(100);
+			tableExtList.getColumnModel().getColumn(2).setMinWidth(500);
+			tableExtList.getColumnModel().getColumn(3).setMinWidth(100);
+			JTableHeader header = tableExtList.getTableHeader();
+			header.setPreferredSize(new Dimension(100, 40));
+			for (int i = 0; i < alGRE.size(); i++) {
+				modelExtWordList.addRow(new Object[] { alGRE.get(i).getName(), alGRE.get(i).getPhonetic(),
+						alGRE.get(i).getMeaning(0), false });
 			}
-			extList.setPreferredScrollableViewportSize(new Dimension(800, 550));
-			extList.setFillsViewportHeight(true);
-			extList.setPreferredSize(null);
+			tableExtList.setPreferredScrollableViewportSize(new Dimension(800, 550));
+			tableExtList.setFillsViewportHeight(true);
+			tableExtList.setPreferredSize(null);
 			btnBackDict2 = new JButton("Back");
 			btnBackDict2.setAlignmentX(Component.CENTER_ALIGNMENT);
 			btnBackDict2.addActionListener(this);
 			btnBackDict2.setBackground(Color.white);
 
-			dictPanel.add(lblGRE);
-			dictPanel.add(btnAddGRE);
-			dictPanel.add(new JScrollPane(extList, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
+			panelAddWord.add(lblGRE);
+			panelAddWord.add(btnAddGRE);
+			panelAddWord.add(new JScrollPane(tableExtList, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
 					JScrollPane.HORIZONTAL_SCROLLBAR_NEVER));
-			dictPanel.add(btnBackDict2);
+			panelAddWord.add(btnBackDict2);
 		} else if (e.getSource() == btnAddTOEFL) {
-			for (int i = 0; i < toefl.size(); i++) {
+			for (int i = 0; i < alTOEFL.size(); i++) {
 				if ((boolean) modelExtWordList.getValueAt(i, 2)) {
 					ArrayList<String> meaningList = new ArrayList<String>();
 					meaningList.add(modelExtWordList.getValueAt(i, 1).toString());
-					Word newTOEFLWord = new Word(id, modelExtWordList.getValueAt(i, 0).toString(), "", meaningList, 0,
+					Word newWord = new Word(id, modelExtWordList.getValueAt(i, 0).toString(), "", meaningList, 0,
 							LocalDate.now(), LocalDate.MIN, LocalDate.now().plusDays(1));
 					id++;
-					wordList.add(newTOEFLWord);
+					alWord.add(newWord);
 				}
 			}
-			wordArrayToTable(wordList);
-			wordArrayToFile(wordList);
+			wordArrayToTable(alWord);
+			wordArrayToFile(alWord);
 			JOptionPane.showMessageDialog(null, "Words successfully added to list!", "Vocabulary Builder",
 					JOptionPane.INFORMATION_MESSAGE);
+			for (int i = 0; i < alTOEFL.size(); i++) {
+				modelExtWordList.setValueAt(false, i, 3);
+			}
+		} else if (e.getSource() == btnAddGRE) {
+			for (int i = 0; i < alGRE.size(); i++) {
+				if ((boolean) modelExtWordList.getValueAt(i, 3)) {
+					ArrayList<String> meaningList = new ArrayList<String>();
+					meaningList.add(modelExtWordList.getValueAt(i, 2).toString());
+					Word newWord = new Word(id, modelExtWordList.getValueAt(i, 0).toString(),
+							modelExtWordList.getValueAt(i, 1).toString(), meaningList, 0, LocalDate.now(),
+							LocalDate.MIN, LocalDate.now().plusDays(1));
+					id++;
+					alWord.add(newWord);
+				}
+			}
+			wordArrayToTable(alWord);
+			wordArrayToFile(alWord);
+			JOptionPane.showMessageDialog(null, "Words successfully added to list!", "Vocabulary Builder",
+					JOptionPane.INFORMATION_MESSAGE);
+			for (int i = 0; i < alGRE.size(); i++) {
+				modelExtWordList.setValueAt(false, i, 3);
+			}
 		} else if (e.getSource() == btnBackDict1) {
-			dictPanel.removeAll();
-			dictPanel.revalidate();
-			dictPanel.repaint();
-			dictPanel.setLayout(new FlowLayout());
-			dictPanel.add(dictionaryLabel);
-			dictPanel.add(Box.createVerticalStrut(20));
-			dictPanel.add(wordSearchTF);
-			dictPanel.add(btnSearch);
-			dictPanel.add(btnAddtoList);
-			dictPanel.add(Box.createVerticalStrut(20));
-			dictPanel.add(searchResultsTA);
-			dictPanel.add(orLabel);
-			dictPanel.add(btnPickWord);
-		} else if (e.getSource() == btnBackDict2) {
-			drawPickAWordListPanel();
+			panelAddWord.removeAll();
+			panelAddWord.revalidate();
+			panelAddWord.repaint();
+			panelAddWord.setLayout(new FlowLayout());
+			panelAddWord.add(lblTypeWord);
+			panelAddWord.add(Box.createVerticalStrut(20));
+			panelAddWord.add(tfWordSearch);
+			panelAddWord.add(btnSearch);
+			panelAddWord.add(btnAddtoList);
+			panelAddWord.add(Box.createVerticalStrut(20));
+			panelAddWord.add(taSearchResults);
+			panelAddWord.add(lblOr);
+			panelAddWord.add(btnPickWord);
 		}
 	}
 
 	public void stateChanged(ChangeEvent arg0) {
-		if (tabbedPane.getTitleAt(tabbedPane.getSelectedIndex()).equals("Review") && reviseWordList.size() > 0) {
-			lblNoOfWordsRemaining.setText(String.valueOf(reviseWordList.size()));
-			if (reviseWordList.size() == 1) {
-				JOptionPane.showMessageDialog(null, "You have " + reviseWordList.size() + " word to be revised!",
+		if (tabbedPane.getTitleAt(tabbedPane.getSelectedIndex()).equals("Review") && alRevise.size() > 0) {
+			lblNoOfWordsRemaining.setText(String.valueOf(alRevise.size()));
+			if (alRevise.size() == 1) {
+				JOptionPane.showMessageDialog(null, "You have " + alRevise.size() + " word to be revised!",
 						"Vocabulary Builder", JOptionPane.INFORMATION_MESSAGE);
 			} else {
-				JOptionPane.showMessageDialog(null, "You have " + reviseWordList.size() + " words to be revised!",
+				JOptionPane.showMessageDialog(null, "You have " + alRevise.size() + " words to be revised!",
 						"Vocabulary Builder", JOptionPane.INFORMATION_MESSAGE);
 			}
 
-			if (reviseWordList.size() > 0) {
-				wordReviewing = reviseWordList.get(reviseIndex);
-				wordReview.setText(reviseWordList.get(reviseIndex).getName());
-				answerTA.setText(reviseWordList.get(reviseIndex).getMeaning());
+			if (alRevise.size() > 0) {
+				wordReviewing = alRevise.get(reviseIndex);
+				lblWordReview.setText(alRevise.get(reviseIndex).getName());
+				taAnswer.setText(alRevise.get(reviseIndex).getMeaning());
 			}
 		} else if (tabbedPane.getTitleAt(tabbedPane.getSelectedIndex()).equals("Stats")) {
-			statTA.setText("");
-			statTA.append("Total Number of Words: " + wordList.size() + "\n");
+			taStat.setText("");
+			taStat.append("Total Number of Words: " + alWord.size() + "\n");
 			int wordsPastWeek = 0;
-			for (int i = 0; i < wordList.size(); i++) {
+			for (int i = 0; i < alWord.size(); i++) {
 				long diff = Duration
-						.between(LocalDate.now().atStartOfDay(), wordList.get(i).getDateAdded().atStartOfDay())
-						.toDays();
+						.between(LocalDate.now().atStartOfDay(), alWord.get(i).getDateAdded().atStartOfDay()).toDays();
 				if (diff >= -7) {
 					wordsPastWeek++;
 				}
 			}
-			statTA.append("Number of new words in past week: " + wordsPastWeek + "\n");
+			taStat.append("Number of new words in past week: " + wordsPastWeek + "\n");
 			for (int i = 0; i < noOfWordsInLevel.length; i++) {
 				if (i == 10) {
-					statTA.append("Number of words mastered: " + noOfWordsInLevel[i] + "\n");
+					taStat.append("Number of words mastered: " + noOfWordsInLevel[i] + "\n");
 				} else {
-					statTA.append("Number of words in level " + i + ": " + noOfWordsInLevel[i] + "\n");
+					taStat.append("Number of words in level " + i + ": " + noOfWordsInLevel[i] + "\n");
 				}
 			}
-		} else if (tabbedPane.getTitleAt(tabbedPane.getSelectedIndex()).equals("Word")) {
+		} else if (tabbedPane.getTitleAt(tabbedPane.getSelectedIndex()).equals("Word List")) {
 			clearTableModel(modelWord);
-			wordArrayToTable(wordList);
+			wordArrayToTable(alWord);
 		}
 	}
 
@@ -632,9 +645,9 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 					if (meaningData.size() == 1 && meaningData.get(0).length() == 0) { // no meanings
 						meaningData = new ArrayList<String>();
 					}
-					String[] addDateArray = data[4].split(dateDelimit);
-					String[] reviseDateArray = data[6].split(dateDelimit);
-					String[] completeDateArray = data[5].split(dateDelimit);
+					String[] addDateArray = data[4].split(delimitDate);
+					String[] reviseDateArray = data[6].split(delimitDate);
+					String[] completeDateArray = data[5].split(delimitDate);
 					LocalDate la = LocalDate.of(Integer.parseInt(addDateArray[2]), Integer.parseInt(addDateArray[1]),
 							Integer.parseInt(addDateArray[0]));
 					LocalDate ld = LocalDate.of(Integer.parseInt(reviseDateArray[2]),
@@ -645,10 +658,10 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 							ld);
 					id++;
 					if (ld.isBefore(LocalDate.now()) || ld.isEqual(LocalDate.now())) {
-						reviseWordList.add(wordFromFile);
+						alRevise.add(wordFromFile);
 					}
 					noOfWordsInLevel[wordFromFile.getLevel()]++;
-					wordList.add(wordFromFile);
+					alWord.add(wordFromFile);
 					line = in.readLine();
 				}
 				in.close();
@@ -670,7 +683,7 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 			if (word.getLevel() >= 10) {
 				modelWord.setValueAt("Mastered", insertIndex, 4);
 			} else {
-				modelWord.setValueAt(word.getLevel() + dateDelimit + (noOfWordsInLevel.length - 1), insertIndex, 4);
+				modelWord.setValueAt(word.getLevel() + delimitDate + (noOfWordsInLevel.length - 1), insertIndex, 4);
 			}
 			modelWord.setValueAt(word.getDateAdded(), insertIndex, 5);
 			for (int j = 0; j < word.getNumMeaning(); j++) {
@@ -682,11 +695,11 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 	}
 
 	public void wordArrayToFile(ArrayList<Word> aw) {
-		if (wordFile.delete()) {
-			wordFile = new File("words.txt");
+		if (fileWord.delete()) {
+			fileWord = new File("words.txt");
 		}
 		try {
-			out = new BufferedWriter(new FileWriter(wordFile, true));
+			out = new BufferedWriter(new FileWriter(fileWord, true));
 			for (int i = 0; i < aw.size(); i++) {
 				Word word = aw.get(i);
 				if (word.getName() == "") {
@@ -696,20 +709,20 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 				for (int mi = 0; mi < word.getNumMeaning(); mi++) {
 					meaningToFile = meaningToFile.concat(word.getMeaning(mi));
 					if (mi != word.getNumMeaning() - 1) {
-						meaningToFile = meaningToFile.concat(meanDelimit);
+						meaningToFile = meaningToFile.concat(delimitMean);
 					}
 				}
-				out.write(word.getName() + fieldDelimit);
-				out.write(word.getPhonetic() + fieldDelimit);
-				out.write(meaningToFile + fieldDelimit);
-				out.write(word.getLevel() + fieldDelimit);
-				out.write(word.getDateAdded().getDayOfMonth() + dateDelimit + word.getDateAdded().getMonthValue()
-						+ dateDelimit + word.getDateAdded().getYear() + fieldDelimit);
+				out.write(word.getName() + delimitField);
+				out.write(word.getPhonetic() + delimitField);
+				out.write(meaningToFile + delimitField);
+				out.write(word.getLevel() + delimitField);
+				out.write(word.getDateAdded().getDayOfMonth() + delimitDate + word.getDateAdded().getMonthValue()
+						+ delimitDate + word.getDateAdded().getYear() + delimitField);
 				out.write(
-						word.getDateCompleted().getDayOfMonth() + dateDelimit + word.getDateCompleted().getMonthValue()
-								+ dateDelimit + word.getDateCompleted().getYear() + fieldDelimit);
-				out.write(word.getDateRevise().getDayOfMonth() + dateDelimit + word.getDateRevise().getMonthValue()
-						+ dateDelimit + word.getDateRevise().getYear());
+						word.getDateCompleted().getDayOfMonth() + delimitDate + word.getDateCompleted().getMonthValue()
+								+ delimitDate + word.getDateCompleted().getYear() + delimitField);
+				out.write(word.getDateRevise().getDayOfMonth() + delimitDate + word.getDateRevise().getMonthValue()
+						+ delimitDate + word.getDateRevise().getYear());
 				out.newLine();
 			}
 			out.close();
@@ -733,17 +746,16 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 			if (dict.equals("oxford")) {
 				url = new URL("https://od-api.oxforddictionaries.com:443/api/v1/entries/en/" + word + "/definitions");
 				HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+				// Request authentication
 				conn.setRequestMethod("GET");
 				conn.setRequestProperty("Accept", "application/json");
 				conn.setRequestProperty("app_id", "7834b310");
 				conn.setRequestProperty("app_key", "82781012e44b2637051c49060569cce5");
-
 				if (conn.getResponseCode() != 200) {
 					throw new RuntimeException("Failed : HTTP error code : " + conn.getResponseCode());
 				}
 
 				BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
-
 				boolean subsenses = false;
 				String output;
 				while ((output = br.readLine()) != null) {
@@ -753,6 +765,7 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 					} else if (trimmed.equals("]")) {
 						subsenses = false;
 					}
+					// Do not put values in subsenses into the meaning
 					if (trimmed.contains("\"definitions\"") && !subsenses) {
 						meanings.add(br.readLine().trim().replaceAll("^\"|\"$", ""));
 					}
@@ -761,31 +774,27 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 						wordType = wordType.replaceAll("\"", "").replaceAll(",", "");
 					}
 				}
-
 				conn.disconnect();
 				return meanings;
-			} else if (dict.equals("dict cn")) {
-				url = new URL("http://dict.cn/" + word);
-				BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
-
-				String output;
-				// TO-DO Search love
-				while ((output = in.readLine()) != null) {
-					if (output.contains("strong")) {
-						System.out.println(output);
-						meanings.add(output.trim().replaceAll("^\"|\"$", "").replaceAll("<strong>", "")
-								.replaceAll("</strong>", ""));
-					}
-
-				}
-
-				in.close();
-				return meanings;
-			} else {
+			}
+			// Discontinued: a Chinese dictionary
+			/*
+			 * else if (dict.equals("dict cn")) { url = new URL("http://dict.cn/" + word);
+			 * BufferedReader in = new BufferedReader(new
+			 * InputStreamReader(url.openStream()));
+			 * 
+			 * String output; // TODO Search love while ((output = in.readLine()) != null) {
+			 * if (output.contains("strong")) { System.out.println(output);
+			 * meanings.add(output.trim().replaceAll("^\"|\"$", "").replaceAll("<strong>",
+			 * "") .replaceAll("</strong>", "")); }
+			 * 
+			 * }
+			 * 
+			 * in.close(); return meanings; }
+			 */ else {
 				url = new URL("");
 				return null;
 			}
-
 		} catch (MalformedURLException e) {
 			JOptionPane.showMessageDialog(null, "URL Malformed", "Vocabulary Builder", JOptionPane.ERROR_MESSAGE);
 			return null;
@@ -804,12 +813,12 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 	}
 
 	public void increaseWordLevel(int wid) {
-		for (int i = 0; i < wordList.size(); i++) {
-			if (wordList.get(i).getId() == wid) {
-				wordList.get(i).incLevel();
-				wordList.get(i).setNewRevDate();
-				wordArrayToTable(wordList);
-				wordArrayToFile(wordList);
+		for (int i = 0; i < alWord.size(); i++) {
+			if (alWord.get(i).getId() == wid) {
+				alWord.get(i).incLevel();
+				alWord.get(i).setNewRevDate();
+				wordArrayToTable(alWord);
+				wordArrayToFile(alWord);
 			}
 
 		}
@@ -819,25 +828,29 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 		btnReviewAnswer.setVisible(true);
 		btnRemember.setEnabled(false);
 		btnDontRemember.setEnabled(false);
-		if (reviseWordList.size() > 0) {
-			if (reviseIndex >= reviseWordList.size() - 1) {
+		if (alRevise.size() > 0) {
+			if (reviseIndex >= alRevise.size() - 1) {
 				reviseIndex = 0;
 			} else {
 				reviseIndex++;
 			}
-			wordReviewing = reviseWordList.get(reviseIndex);
-			wordReview.setText(reviseWordList.get(reviseIndex).getName());
-			answerTA.setText(reviseWordList.get(reviseIndex).getMeaning());
+			wordReviewing = alRevise.get(reviseIndex);
+			lblWordReview.setText(alRevise.get(reviseIndex).getName());
+			taAnswer.setText(alRevise.get(reviseIndex).getMeaning());
 		} else {
 			btnReviewAnswer.setEnabled(false);
-			wordReview.setText("");
+			lblWordReview.setText("");
 			JOptionPane.showMessageDialog(null, "Congratulations! You have completed this review session!",
 					"Vocabulary Builder", JOptionPane.INFORMATION_MESSAGE);
 		}
 
 	}
 
-	ArrayList<Word> getTOEFLList(File f) {
+	public ArrayList<Word> getSATList(File f) {
+		return null;
+	}
+
+	public ArrayList<Word> getTOEFLList(File f) {
 		ArrayList<Word> listTOEFL = new ArrayList<Word>();
 		if (f.exists()) {
 			try {
@@ -859,7 +872,7 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 		return listTOEFL;
 	}
 
-	private ArrayList<Word> getGREList(File f) {
+	public ArrayList<Word> getGREList(File f) {
 		ArrayList<Word> listGRE = new ArrayList<Word>();
 		if (f.exists()) {
 			try {
@@ -867,10 +880,7 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 				String line;
 				line = in.readLine();
 				while (line != null) {
-					String[] arrLine = line.split("\\|");
-//					System.out.println(arrLine[1]);
-//					System.out.println(line);
-//					System.out.println(arrLine[0] + " " + arrLine[1] + " " + arrLine[2]);
+					String[] arrLine = line.split("\\" + delimitField);
 					Word wordGRE = new Word(arrLine[0], arrLine[1], arrLine[2]);
 					listGRE.add(wordGRE);
 					line = in.readLine();
@@ -884,12 +894,12 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 		return listGRE;
 	}
 
-	void drawPickAWordListPanel() {
+	public void drawPickAWordListPanel() {
 		// pick a word list panel
-		dictPanel.removeAll();
-		dictPanel.revalidate();
-		dictPanel.repaint();
-		dictPanel.setLayout(new BoxLayout(dictPanel, BoxLayout.PAGE_AXIS));
+		panelAddWord.removeAll();
+		panelAddWord.revalidate();
+		panelAddWord.repaint();
+		panelAddWord.setLayout(new BoxLayout(panelAddWord, BoxLayout.PAGE_AXIS));
 		JLabel lblChooseList = new JLabel("Choose a list:");
 		lblChooseList.setAlignmentX(Component.CENTER_ALIGNMENT);
 		lblChooseList.setFont(new Font("Times new Roman", Font.TRUETYPE_FONT, 48));
@@ -913,14 +923,14 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 		btnBackDict1.addActionListener(this);
 		btnBackDict1.setBackground(Color.white);
 
-		dictPanel.add(lblChooseList);
-		dictPanel.add(Box.createVerticalStrut(100));
-		dictPanel.add(btnSAT);
-		dictPanel.add(Box.createVerticalStrut(100));
-		dictPanel.add(btnTOEFL);
-		dictPanel.add(Box.createVerticalStrut(100));
-		dictPanel.add(btnGRE);
-		dictPanel.add(Box.createVerticalStrut(20));
-		dictPanel.add(btnBackDict1);
+		panelAddWord.add(lblChooseList);
+		panelAddWord.add(Box.createVerticalStrut(100));
+		panelAddWord.add(btnSAT);
+		panelAddWord.add(Box.createVerticalStrut(100));
+		panelAddWord.add(btnTOEFL);
+		panelAddWord.add(Box.createVerticalStrut(100));
+		panelAddWord.add(btnGRE);
+		panelAddWord.add(Box.createVerticalStrut(20));
+		panelAddWord.add(btnBackDict1);
 	}
 }
