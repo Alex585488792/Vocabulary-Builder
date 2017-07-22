@@ -13,6 +13,13 @@ public class Word {
 		mArr.add(m);
 		meaning = mArr;
 	}
+	public Word(String n, String ps, String m) {
+		name = n;
+		phonetic = ps;
+		ArrayList<String> mArr = new ArrayList<String>();
+		mArr.add(m);
+		meaning = mArr;
+	}
 	public Word(int i, String n, String p, ArrayList<String> m, int lvl,LocalDate da, LocalDate dc, LocalDate dr) {
 		id = i;
 		name = n;
