@@ -3,6 +3,8 @@ import java.util.*;
 import javax.swing.border.Border;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import java.io.*;
@@ -15,7 +17,12 @@ import java.time.LocalDate;
 import java.awt.event.*;
 import java.awt.*;
 
-public class Main extends JFrame implements ActionListener, ChangeListener {
+// TODO limit number of words in TOEFL and GRE that can be added (5)
+// bug: when clicking a specific position between two columns, the checkbox will not change but the table is still
+// being updated
+// Reposition of labels in review panel
+// make "Show meaning" smaller and the word being reviewed bigger
+public class Main extends JFrame implements ActionListener, ChangeListener, TableModelListener {
 	private static final long serialVersionUID = 1L;
 	private static final String delimitField = "|", delimitMean = "^", delimitDate = "/";
 	private ArrayList<String> meaningSearch;
@@ -27,7 +34,7 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 			fontLargeBtn = new Font("Times new Roman", Font.BOLD, 36),
 			fontBody = new Font("Times new Roman", Font.PLAIN, 24),
 			fontReviewWord = new Font("Times new Roman", Font.BOLD, 72);
-	private int readFileIndex = 0, id = 0, reviseIndex = 0;
+	private int readFileIndex = 0, id = 0, reviseIndex = 0, noOfExtWordListWords;
 	private int[] noOfWordsInLevel = new int[11];
 	private JButton btnAdd, btnEdit, btnDelete, btnSearch, btnAddtoList, btnReviewAnswer, btnRemember, btnDontRemember,
 			btnPickWord, btnSAT, btnTOEFL, btnAddTOEFL, btnGRE, btnAddGRE, btnBackDict1, btnBackDict2;
@@ -420,6 +427,7 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 		} else if (e.getSource() == btnPickWord || e.getSource() == btnBackDict2) {
 			drawPickAWordListPanel();
 		} else if (e.getSource() == btnTOEFL) {
+			noOfExtWordListWords = 0;
 			panelAddWord.removeAll();
 			panelAddWord.revalidate();
 			panelAddWord.repaint();
@@ -433,6 +441,7 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 			alTOEFL = getTOEFLList(new File("toefl.txt"));
 			modelExtWordList = new DefaultTableModel(0, toeflColTitle.length);
 			modelExtWordList.setColumnIdentifiers(toeflColTitle);
+			modelExtWordList.addTableModelListener(this);
 			tableExtList = new JTable(modelExtWordList) {
 				private static final long serialVersionUID = 1L;
 
@@ -538,22 +547,31 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 					JScrollPane.HORIZONTAL_SCROLLBAR_NEVER));
 			panelAddWord.add(btnBackDict2);
 		} else if (e.getSource() == btnAddTOEFL) {
-			for (int i = 0; i < alTOEFL.size(); i++) {
-				if ((boolean) modelExtWordList.getValueAt(i, 2)) {
-					ArrayList<String> meaningList = new ArrayList<String>();
-					meaningList.add(modelExtWordList.getValueAt(i, 1).toString());
-					Word newWord = new Word(id, modelExtWordList.getValueAt(i, 0).toString(), "", meaningList, 0,
-							LocalDate.now(), LocalDate.MIN, LocalDate.now().plusDays(1));
-					id++;
-					alWord.add(newWord);
-				}
+			System.out.println(noOfExtWordListWords);
+			int option = 0;
+			if (noOfExtWordListWords > 5) {
+				option = JOptionPane.showConfirmDialog(null,
+						"You are adding more than 5 words at a time. Are you sure you want" + " to proceed?",
+						"Vocabulary Builder", JOptionPane.YES_NO_OPTION);
 			}
-			wordArrayToTable(alWord);
-			wordArrayToFile(alWord);
-			JOptionPane.showMessageDialog(null, "Words successfully added to list!", "Vocabulary Builder",
-					JOptionPane.INFORMATION_MESSAGE);
-			for (int i = 0; i < alTOEFL.size(); i++) {
-				modelExtWordList.setValueAt(false, i, 3);
+			if (noOfExtWordListWords <= 5 || option == 0) {
+				for (int i = 0; i < alTOEFL.size(); i++) {
+					if ((boolean) modelExtWordList.getValueAt(i, 2)) {
+						ArrayList<String> meaningList = new ArrayList<String>();
+						meaningList.add(modelExtWordList.getValueAt(i, 1).toString());
+						Word newWord = new Word(id, modelExtWordList.getValueAt(i, 0).toString(), "", meaningList, 0,
+								LocalDate.now(), LocalDate.MIN, LocalDate.now().plusDays(1));
+						id++;
+						alWord.add(newWord);
+					}
+				}
+				wordArrayToTable(alWord);
+				wordArrayToFile(alWord);
+				JOptionPane.showMessageDialog(null, "Words successfully added to list!", "Vocabulary Builder",
+						JOptionPane.INFORMATION_MESSAGE);
+				for (int i = 0; i < alTOEFL.size(); i++) {
+					modelExtWordList.setValueAt(false, i, 2);
+				}
 			}
 		} else if (e.getSource() == btnAddGRE) {
 			for (int i = 0; i < alGRE.size(); i++) {
@@ -932,5 +950,17 @@ public class Main extends JFrame implements ActionListener, ChangeListener {
 		panelAddWord.add(btnGRE);
 		panelAddWord.add(Box.createVerticalStrut(20));
 		panelAddWord.add(btnBackDict1);
+	}
+
+	public void tableChanged(TableModelEvent e) {
+		System.out.println("r = " + e.getFirstRow());
+		if (e.getType() == TableModelEvent.UPDATE
+				&& modelExtWordList.getValueAt(e.getFirstRow(), e.getColumn()).toString().equals("true")) {
+			noOfExtWordListWords++;
+		} else if (e.getType() == TableModelEvent.UPDATE
+				&& modelExtWordList.getValueAt(e.getFirstRow(), e.getColumn()).toString().equals("false")) {
+			noOfExtWordListWords--;
+		}
+
 	}
 }
