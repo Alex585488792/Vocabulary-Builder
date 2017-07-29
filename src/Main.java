@@ -20,24 +20,22 @@ import java.awt.*;
 // TODO limit number of words in TOEFL and GRE that can be added (5)
 // bug: when clicking a specific position between two columns, the checkbox will not change but the table is still
 // being updated
-// Reposition of labels in review panel
-// make "Show meaning" smaller and the word being reviewed bigger
 public class Main extends JFrame implements ActionListener, ChangeListener, TableModelListener {
 	private static final long serialVersionUID = 1L;
 	private static final String delimitField = "|", delimitMean = "^", delimitDate = "/";
 	private ArrayList<String> meaningSearch;
-	private ArrayList<Word> alWord = new ArrayList<Word>(), alRevise = new ArrayList<Word>(), alTOEFL, alGRE;
+	private ArrayList<Word> alWord = new ArrayList<Word>(), alRevise = new ArrayList<Word>(), alSAT, alTOEFL, alGRE;
 	private BufferedWriter out;
 	private DefaultTableModel modelWord, modelExtWordList;
 	private File fileWord = new File("words.txt");
 	private Font fontTitle = new Font("Times new Roman", Font.TRUETYPE_FONT, 48),
 			fontLargeBtn = new Font("Times new Roman", Font.BOLD, 36),
 			fontBody = new Font("Times new Roman", Font.PLAIN, 24),
-			fontReviewWord = new Font("Times new Roman", Font.BOLD, 72);
+			fontReviewWord = new Font("Times new Roman", Font.BOLD, 96);
 	private int readFileIndex = 0, id = 0, reviseIndex = 0, noOfExtWordListWords;
 	private int[] noOfWordsInLevel = new int[11];
 	private JButton btnAdd, btnEdit, btnDelete, btnSearch, btnAddtoList, btnReviewAnswer, btnRemember, btnDontRemember,
-			btnPickWord, btnSAT, btnTOEFL, btnAddTOEFL, btnGRE, btnAddGRE, btnBackDict1, btnBackDict2;
+			btnPickWord, btnSAT, btnAddSAT, btnTOEFL, btnAddTOEFL, btnGRE, btnAddGRE, btnBackDict1, btnBackDict2;
 	private JLabel lblWordReview, lblNoOfWordsRemaining, lblTypeWord, lblOr;
 	private JPanel panelWordList, panelStat, panelReview, panelAddWord;
 	private JScrollPane spTAMeaning, spTAAnswer;
@@ -68,7 +66,7 @@ public class Main extends JFrame implements ActionListener, ChangeListener, Tabl
 		// JTable
 		String[] wordColumnTitle = { "", "Word", "<html>Phonetic<br> Symbol", "Meaning", "Progress",
 				"<html>Date <br>Added" };
-		modelWord = new DefaultTableModel(100, wordColumnTitle.length);
+		modelWord = new DefaultTableModel(0, wordColumnTitle.length);
 		modelWord.setColumnIdentifiers(wordColumnTitle);
 		tableWord = new JTable(modelWord) {
 			private static final long serialVersionUID = 1L;
@@ -160,15 +158,15 @@ public class Main extends JFrame implements ActionListener, ChangeListener, Tabl
 		// Review panel JComponents
 		JLabel lblWhatMeaning = new JLabel("What is the meaning of this word?");
 		lblWhatMeaning.setFont(fontTitle);
-		lblWhatMeaning.setBounds(150, 50, 900, 60);
+		lblWhatMeaning.setBounds(150, 0, 900, 60);
 		lblNoOfWordsRemaining = new JLabel("0");
 		lblNoOfWordsRemaining.setBounds(850, 0, 50, 30);
 		lblWordReview = new JLabel("");
 		lblWordReview.setFont(fontReviewWord);
 		lblWordReview.setHorizontalAlignment(JLabel.CENTER);
-		lblWordReview.setBounds(0, 70, 900, 100);
+		lblWordReview.setBounds(0, 40, 900, 150);
 		btnReviewAnswer = new JButton("Show Meaning");
-		btnReviewAnswer.setFont(fontReviewWord);
+		btnReviewAnswer.setFont(fontLargeBtn);
 		btnReviewAnswer.setPreferredSize(new Dimension(800, 400));
 		btnReviewAnswer.setBounds(50, 180, 800, 400);
 		btnReviewAnswer.addActionListener(this);
@@ -366,7 +364,6 @@ public class Main extends JFrame implements ActionListener, ChangeListener, Tabl
 						}
 					}
 					alWord.get(wordId).delete();
-					clearTableModel(modelWord);
 					wordArrayToTable(alWord);
 					wordArrayToFile(alWord);
 				} else if (option == 0) {
@@ -426,6 +423,70 @@ public class Main extends JFrame implements ActionListener, ChangeListener, Tabl
 			setNewWord();
 		} else if (e.getSource() == btnPickWord || e.getSource() == btnBackDict2) {
 			drawPickAWordListPanel();
+		} else if (e.getSource() == btnSAT) {
+			noOfExtWordListWords = 0;
+			panelAddWord.removeAll();
+			panelAddWord.revalidate();
+			panelAddWord.repaint();
+			panelAddWord.setLayout(new FlowLayout(FlowLayout.CENTER, 50, 10));
+			JLabel lblSAT = new JLabel("SAT Word List");
+			lblSAT.setFont(new Font("Times new Roman", Font.TRUETYPE_FONT, 48));
+			lblSAT.setAlignmentX(Component.CENTER_ALIGNMENT);
+			btnAddSAT = new JButton("Add words to list");
+			btnAddSAT.addActionListener(this);
+			btnAddSAT.setBackground(Color.GREEN);
+			alSAT = getSATList(new File("sat.txt"));
+			modelExtWordList = new DefaultTableModel(0, greColTitle.length);
+			modelExtWordList.setColumnIdentifiers(greColTitle);
+			modelExtWordList.addTableModelListener(this);
+			tableExtList = new JTable(modelExtWordList) {
+				private static final long serialVersionUID = 1L;
+
+				public boolean isCellEditable(int row, int column) {
+					switch (column) {
+					case 3:
+						return true;
+					default:
+						return false;
+					}
+				};
+
+				public Class getColumnClass(int column) {
+					switch (column) {
+					case 0:
+						return String.class;
+					case 1:
+						return String.class;
+					case 2:
+						return String.class;
+					default:
+						return Boolean.class;
+					}
+				}
+			};
+			tableExtList.getColumnModel().getColumn(0).setMinWidth(100);
+			tableExtList.getColumnModel().getColumn(1).setMinWidth(100);
+			tableExtList.getColumnModel().getColumn(2).setMinWidth(500);
+			tableExtList.getColumnModel().getColumn(3).setMinWidth(100);
+			JTableHeader header = tableExtList.getTableHeader();
+			header.setPreferredSize(new Dimension(100, 40));
+			for (int i = 0; i < alSAT.size(); i++) {
+				modelExtWordList.addRow(new Object[] { alSAT.get(i).getName(), alSAT.get(i).getPhonetic(),
+						alSAT.get(i).getMeaning(0), false });
+			}
+			tableExtList.setPreferredScrollableViewportSize(new Dimension(800, 550));
+			tableExtList.setFillsViewportHeight(true);
+			tableExtList.setPreferredSize(null);
+			btnBackDict2 = new JButton("Back");
+			btnBackDict2.setAlignmentX(Component.CENTER_ALIGNMENT);
+			btnBackDict2.addActionListener(this);
+			btnBackDict2.setBackground(Color.white);
+
+			panelAddWord.add(lblSAT);
+			panelAddWord.add(btnAddSAT);
+			panelAddWord.add(new JScrollPane(tableExtList, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
+					JScrollPane.HORIZONTAL_SCROLLBAR_NEVER));
+			panelAddWord.add(btnBackDict2);
 		} else if (e.getSource() == btnTOEFL) {
 			noOfExtWordListWords = 0;
 			panelAddWord.removeAll();
@@ -485,6 +546,7 @@ public class Main extends JFrame implements ActionListener, ChangeListener, Tabl
 					JScrollPane.HORIZONTAL_SCROLLBAR_NEVER));
 			panelAddWord.add(btnBackDict2);
 		} else if (e.getSource() == btnGRE) {
+			noOfExtWordListWords = 0;
 			panelAddWord.removeAll();
 			panelAddWord.revalidate();
 			panelAddWord.repaint();
@@ -498,6 +560,7 @@ public class Main extends JFrame implements ActionListener, ChangeListener, Tabl
 			alGRE = getGREList(new File("gre.txt"));
 			modelExtWordList = new DefaultTableModel(0, greColTitle.length);
 			modelExtWordList.setColumnIdentifiers(greColTitle);
+			modelExtWordList.addTableModelListener(this);
 			tableExtList = new JTable(modelExtWordList) {
 				private static final long serialVersionUID = 1L;
 
@@ -546,12 +609,38 @@ public class Main extends JFrame implements ActionListener, ChangeListener, Tabl
 			panelAddWord.add(new JScrollPane(tableExtList, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
 					JScrollPane.HORIZONTAL_SCROLLBAR_NEVER));
 			panelAddWord.add(btnBackDict2);
-		} else if (e.getSource() == btnAddTOEFL) {
-			System.out.println(noOfExtWordListWords);
+		} else if (e.getSource() == btnAddSAT) {
 			int option = 0;
 			if (noOfExtWordListWords > 5) {
 				option = JOptionPane.showConfirmDialog(null,
-						"You are adding more than 5 words at a time. Are you sure you want" + " to proceed?",
+						"You are adding more than 5 words at a time. Are you sure you want to proceed?",
+						"Vocabulary Builder", JOptionPane.YES_NO_OPTION);
+			}
+			if (option == 0 || noOfExtWordListWords <= 5) {
+				for (int i = 0; i < alSAT.size(); i++) {
+					if ((boolean) modelExtWordList.getValueAt(i, 3)) {
+						ArrayList<String> meaningList = new ArrayList<String>();
+						meaningList.add(modelExtWordList.getValueAt(i, 2).toString());
+						Word newWord = new Word(id, modelExtWordList.getValueAt(i, 0).toString(),
+								modelExtWordList.getValueAt(i, 1).toString(), meaningList, 0, LocalDate.now(),
+								LocalDate.MIN, LocalDate.now().plusDays(1));
+						id++;
+						alWord.add(newWord);
+					}
+				}
+				wordArrayToTable(alWord);
+				wordArrayToFile(alWord);
+				JOptionPane.showMessageDialog(null, "Words successfully added to list!", "Vocabulary Builder",
+						JOptionPane.INFORMATION_MESSAGE);
+				for (int i = 0; i < alSAT.size(); i++) {
+					modelExtWordList.setValueAt(false, i, 3);
+				}
+			}
+		} else if (e.getSource() == btnAddTOEFL) {
+			int option = 0;
+			if (noOfExtWordListWords > 5) {
+				option = JOptionPane.showConfirmDialog(null,
+						"You are adding more than 5 words at a time. Are you sure you want to proceed?",
 						"Vocabulary Builder", JOptionPane.YES_NO_OPTION);
 			}
 			if (noOfExtWordListWords <= 5 || option == 0) {
@@ -574,23 +663,31 @@ public class Main extends JFrame implements ActionListener, ChangeListener, Tabl
 				}
 			}
 		} else if (e.getSource() == btnAddGRE) {
-			for (int i = 0; i < alGRE.size(); i++) {
-				if ((boolean) modelExtWordList.getValueAt(i, 3)) {
-					ArrayList<String> meaningList = new ArrayList<String>();
-					meaningList.add(modelExtWordList.getValueAt(i, 2).toString());
-					Word newWord = new Word(id, modelExtWordList.getValueAt(i, 0).toString(),
-							modelExtWordList.getValueAt(i, 1).toString(), meaningList, 0, LocalDate.now(),
-							LocalDate.MIN, LocalDate.now().plusDays(1));
-					id++;
-					alWord.add(newWord);
-				}
+			int option = 0;
+			if (noOfExtWordListWords > 5) {
+				option = JOptionPane.showConfirmDialog(null,
+						"You are adding more than 5 words at a time. Are you sure you want to proceed?",
+						"Vocabulary Builder", JOptionPane.YES_NO_OPTION);
 			}
-			wordArrayToTable(alWord);
-			wordArrayToFile(alWord);
-			JOptionPane.showMessageDialog(null, "Words successfully added to list!", "Vocabulary Builder",
-					JOptionPane.INFORMATION_MESSAGE);
-			for (int i = 0; i < alGRE.size(); i++) {
-				modelExtWordList.setValueAt(false, i, 3);
+			if (noOfExtWordListWords <= 5 || option == 0) {
+				for (int i = 0; i < alGRE.size(); i++) {
+					if ((boolean) modelExtWordList.getValueAt(i, 3)) {
+						ArrayList<String> meaningList = new ArrayList<String>();
+						meaningList.add(modelExtWordList.getValueAt(i, 2).toString());
+						Word newWord = new Word(id, modelExtWordList.getValueAt(i, 0).toString(),
+								modelExtWordList.getValueAt(i, 1).toString(), meaningList, 0, LocalDate.now(),
+								LocalDate.MIN, LocalDate.now().plusDays(1));
+						id++;
+						alWord.add(newWord);
+					}
+				}
+				wordArrayToTable(alWord);
+				wordArrayToFile(alWord);
+				JOptionPane.showMessageDialog(null, "Words successfully added to list!", "Vocabulary Builder",
+						JOptionPane.INFORMATION_MESSAGE);
+				for (int i = 0; i < alGRE.size(); i++) {
+					modelExtWordList.setValueAt(false, i, 3);
+				}
 			}
 		} else if (e.getSource() == btnBackDict1) {
 			panelAddWord.removeAll();
@@ -645,7 +742,6 @@ public class Main extends JFrame implements ActionListener, ChangeListener, Tabl
 				}
 			}
 		} else if (tabbedPane.getTitleAt(tabbedPane.getSelectedIndex()).equals("Word List")) {
-			clearTableModel(modelWord);
 			wordArrayToTable(alWord);
 		}
 	}
@@ -690,24 +786,17 @@ public class Main extends JFrame implements ActionListener, ChangeListener, Tabl
 	}
 
 	public void wordArrayToTable(ArrayList<Word> aw) {
-		int insertIndex = 0;
+		modelWord.setRowCount(0);
 		for (int i = 0; i < aw.size(); i++) {
 			Word word = aw.get(i);
 			if (word.getName() == "") {
 				continue;
 			}
-			modelWord.setValueAt(word.getName(), insertIndex, 1);
-			modelWord.setValueAt(word.getPhonetic(), insertIndex, 2);
-			if (word.getLevel() >= 10) {
-				modelWord.setValueAt("Mastered", insertIndex, 4);
-			} else {
-				modelWord.setValueAt(word.getLevel() + delimitDate + (noOfWordsInLevel.length - 1), insertIndex, 4);
-			}
-			modelWord.setValueAt(word.getDateAdded(), insertIndex, 5);
-			for (int j = 0; j < word.getNumMeaning(); j++) {
-				modelWord.setValueAt(word.getMeaning(j), insertIndex, 3);
-				modelWord.setValueAt(word.getId() + "|" + j, insertIndex, 0);
-				insertIndex++;
+			modelWord.addRow(new Object[] {word.getId() + "|" + "0", word.getName(), word.getPhonetic(), word.getMeaning(0), 
+					word.getLevel() >= 10 ? "Mastered" : word.getLevel() + delimitDate + (noOfWordsInLevel.length - 1),
+							word.getDateAdded()});
+			for (int j = 1; j < word.getNumMeaning(); j++) {
+				modelWord.addRow(new Object[] {word.getId() + "|" + j, null, null, word.getMeaning(j), null, null});
 			}
 		}
 	}
@@ -865,7 +954,25 @@ public class Main extends JFrame implements ActionListener, ChangeListener, Tabl
 	}
 
 	public ArrayList<Word> getSATList(File f) {
-		return null;
+		ArrayList<Word> listSAT = new ArrayList<Word>();
+		if (f.exists()) {
+			try {
+				BufferedReader in = new BufferedReader(new FileReader(f));
+				String line;
+				line = in.readLine();
+				while (line != null) {
+					String[] arrLine = line.split("\\" + delimitField);
+					Word wordSAT = new Word(arrLine[0], arrLine[1], arrLine[2]);
+					listSAT.add(wordSAT);
+					line = in.readLine();
+				}
+				in.close();
+			} catch (IOException e) {
+				JOptionPane.showMessageDialog(null, e.getMessage() + "!", "Error", JOptionPane.ERROR_MESSAGE);
+				System.err.println("IOException: " + e.getMessage());
+			}
+		}
+		return listSAT;
 	}
 
 	public ArrayList<Word> getTOEFLList(File f) {
@@ -953,7 +1060,8 @@ public class Main extends JFrame implements ActionListener, ChangeListener, Tabl
 	}
 
 	public void tableChanged(TableModelEvent e) {
-		System.out.println("r = " + e.getFirstRow());
+//		System.out.println("r = " + e.getFirstRow());
+//		System.out.println(noOfExtWordListWords);
 		if (e.getType() == TableModelEvent.UPDATE
 				&& modelExtWordList.getValueAt(e.getFirstRow(), e.getColumn()).toString().equals("true")) {
 			noOfExtWordListWords++;

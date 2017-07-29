@@ -1,50 +1,7 @@
-pass||move or cause to move in a specified direction^go past or across; leave behind or on one side in proceeding^(of time) elapse; go by^transfer (something) to someone, especially by handing or bequeathing it to the next person in a series^(of a candidate) be successful in (an examination, test, or course)^(of a legislative or other official body) approve or put into effect (a proposal or law) by voting on it^pronounce (a judgement or judicial sentence)^discharge (something, especially urine or faeces) from the body^forgo one's turn in a game or an offered opportunity to do or have something^an act or instance of moving past or through something^a success in an examination, test, or course^a card, ticket, or permit giving authorization for the holder to enter or have access to a place, form of transport, or event^(in soccer, rugby, and other games) an act of kicking, hitting, or throwing the ball to another player on the same side^an amorous or sexual advance made to someone^a state or situation of a specified, usually undesirable, nature^an act of refraining from bidding during the auction.^a route over or through mountains|1|19/7/2017|1/1/-999999999|24/7/2017
-abstain||refrain; hold oneself back voluntarily from an action or practice|1|22/7/2017|1/1/-999999999|25/7/2017
-acclaim||applaud; announce with great approval|0|22/7/2017|1/1/-999999999|23/7/2017
-acquiesce||assent; agree without protesting|0|22/7/2017|1/1/-999999999|23/7/2017
-abstruse||obscure; profound; difficult to understand.|0|22/7/2017|1/1/-999999999|23/7/2017
-abyss||enormous chasm; vast bottomless pit; any deep, immeasurable space; hell|0|22/7/2017|1/1/-999999999|23/7/2017
-actuate||put into motion or action; activate|0|22/7/2017|1/1/-999999999|23/7/2017
-adapt||make fit for; change to suit a new purpose|0|22/7/2017|1/1/-999999999|23/7/2017
-adjacent||adjoining; neighboring; close to; lying near|0|22/7/2017|1/1/-999999999|23/7/2017
-ambrosial|adj.|extremely pleasing to the senses, divine (as related to the gods) or delicious (n: ambrosia)|0|22/7/2017|1/1/-999999999|23/7/2017
-ambrosial|adj.|extremely pleasing to the senses, divine (as related to the gods) or delicious (n: ambrosia)|0|22/7/2017|1/1/-999999999|23/7/2017
-aver|v.|to declare|0|22/7/2017|1/1/-999999999|23/7/2017
-aggrandize|v.|to make greater, to increase, thus, to exaggerate.|0|22/7/2017|1/1/-999999999|23/7/2017
-abundant||plentiful; possessing riches or resources|0|23/7/2017|1/1/-999999999|24/7/2017
-abyss||enormous chasm; vast bottomless pit; any deep, immeasurable space; hell|0|23/7/2017|1/1/-999999999|24/7/2017
-abstain||refrain; hold oneself back voluntarily from an action or practice|0|25/7/2017|1/1/-999999999|26/7/2017
-abundant||plentiful; possessing riches or resources|0|25/7/2017|1/1/-999999999|26/7/2017
-accomplice||partner in crime; associate in wrongdoing|0|25/7/2017|1/1/-999999999|26/7/2017
-accuse||blame; condemn|0|25/7/2017|1/1/-999999999|26/7/2017
-acquaint||inform about; cause to come to know personally; make familiar|0|25/7/2017|1/1/-999999999|26/7/2017
-adamant||extremely hard; inflexible; stubbornly unyielding|0|25/7/2017|1/1/-999999999|26/7/2017
-adapt||make fit for; change to suit a new purpose|0|25/7/2017|1/1/-999999999|26/7/2017
-adequate||sufficient; enough to meet a purpose|0|25/7/2017|1/1/-999999999|26/7/2017
-absurd||preposterous; ridiculously incongruous or unreasonable; foolish|0|25/7/2017|1/1/-999999999|26/7/2017
-accessible||easily approached or entered; obtainable; easy to talk to or get along with|0|25/7/2017|1/1/-999999999|26/7/2017
-accurate||capable of providing a correct reading or measurement; performing with care and precision|0|25/7/2017|1/1/-999999999|26/7/2017
-acquiesce||assent; agree without protesting|0|25/7/2017|1/1/-999999999|26/7/2017
-adamant||extremely hard; inflexible; stubbornly unyielding|0|25/7/2017|1/1/-999999999|26/7/2017
-adjacent||adjoining; neighboring; close to; lying near|0|25/7/2017|1/1/-999999999|26/7/2017
-advocate||speak, plead, or argue in favour of; plead for; push for something|0|25/7/2017|1/1/-999999999|26/7/2017
-affluent||having an abundant supply of money or possessions of value|0|25/7/2017|1/1/-999999999|26/7/2017
-agile||moving quickly and lightly; mentally quick|0|25/7/2017|1/1/-999999999|26/7/2017
-allocate||assign; distribute according to plan|0|25/7/2017|1/1/-999999999|26/7/2017
-absurd||preposterous; ridiculously incongruous or unreasonable; foolish|0|25/7/2017|1/1/-999999999|26/7/2017
-abyss||enormous chasm; vast bottomless pit; any deep, immeasurable space; hell|0|25/7/2017|1/1/-999999999|26/7/2017
-acclaim||applaud; announce with great approval|0|25/7/2017|1/1/-999999999|26/7/2017
-accomplice||partner in crime; associate in wrongdoing|0|25/7/2017|1/1/-999999999|26/7/2017
-accuse||blame; condemn|0|25/7/2017|1/1/-999999999|26/7/2017
-acquaint||inform about; cause to come to know personally; make familiar|0|25/7/2017|1/1/-999999999|26/7/2017
-actuate||put into motion or action; activate|0|25/7/2017|1/1/-999999999|26/7/2017
-adamant||extremely hard; inflexible; stubbornly unyielding|0|25/7/2017|1/1/-999999999|26/7/2017
-adhere||stick fast; stick to firmly; be compatible or in accordance with|0|25/7/2017|1/1/-999999999|26/7/2017
-adjacent||adjoining; neighboring; close to; lying near|0|25/7/2017|1/1/-999999999|26/7/2017
-adorn||enhance or decorate with or as if with ornaments|0|25/7/2017|1/1/-999999999|26/7/2017
-abstain||refrain; hold oneself back voluntarily from an action or practice|0|25/7/2017|1/1/-999999999|26/7/2017
-absurd||preposterous; ridiculously incongruous or unreasonable; foolish|0|25/7/2017|1/1/-999999999|26/7/2017
-abyss||enormous chasm; vast bottomless pit; any deep, immeasurable space; hell|0|25/7/2017|1/1/-999999999|26/7/2017
-accurate||capable of providing a correct reading or measurement; performing with care and precision|0|25/7/2017|1/1/-999999999|26/7/2017
-acquaint||inform about; cause to come to know personally; make familiar|0|25/7/2017|1/1/-999999999|26/7/2017
-actuate||put into motion or action; activate|0|25/7/2017|1/1/-999999999|26/7/2017
+pass||move or cause to move in a specified direction^go past or across; leave behind or on one side in proceeding^(of time) elapse; go by^transfer (something) to someone, especially by handing or bequeathing it to the next person in a series^(of a candidate) be successful in (an examination, test, or course)^(of a legislative or other official body) approve or put into effect (a proposal or law) by voting on it^pronounce (a judgement or judicial sentence)^discharge (something, especially urine or faeces) from the body^an act or instance of moving past or through something^a success in an examination, test, or course^a card, ticket, or permit giving authorization for the holder to enter or have access to a place, form of transport, or event^(in soccer, rugby, and other games) an act of kicking, hitting, or throwing the ball to another player on the same side^an amorous or sexual advance made to someone^a state or situation of a specified, usually undesirable, nature^an act of refraining from bidding during the auction.^a route over or through mountains|2|19/7/2017|1/1/-999999999|2/8/2017
+f||adsf|0|30/7/2017|1/1/-999999999|31/7/2017
+rr||sdfdfsd|0|30/7/2017|1/1/-999999999|31/7/2017
+dfdf||sdf|0|30/7/2017|1/1/-999999999|31/7/2017
+bcvb||cvbcv|0|30/7/2017|1/1/-999999999|31/7/2017
+increase||become or make greater in size, amount, or degree^a rise in the size, amount, or degree of something|0|30/7/2017|1/1/-999999999|31/7/2017
+abed|adv.|In bed; on a bed. `|0|30/7/2017|1/1/-999999999|31/7/2017
