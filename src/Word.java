@@ -31,8 +31,8 @@ public class Word {
 		dateComplete = dc;
 		dateRevise = dr;
 	}
-	public void setId(int idd) {
-		this.id = idd;
+	public void setId(int id) {
+		this.id = id;
 	}
 	public int getId() {
 		return this.id;
@@ -110,7 +110,6 @@ public class Word {
 		this.nDontRemember++;
 	}
 	public void delete() {
-		// TODO Auto-generated method stub
 		name = "";
 		meaning.clear();
 		phonetic = "";

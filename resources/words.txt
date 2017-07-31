@@ -1,7 +1,12 @@
 pass||move or cause to move in a specified direction^go past or across; leave behind or on one side in proceeding^(of time) elapse; go by^transfer (something) to someone, especially by handing or bequeathing it to the next person in a series^(of a candidate) be successful in (an examination, test, or course)^(of a legislative or other official body) approve or put into effect (a proposal or law) by voting on it^pronounce (a judgement or judicial sentence)^discharge (something, especially urine or faeces) from the body^an act or instance of moving past or through something^a success in an examination, test, or course^a card, ticket, or permit giving authorization for the holder to enter or have access to a place, form of transport, or event^(in soccer, rugby, and other games) an act of kicking, hitting, or throwing the ball to another player on the same side^an amorous or sexual advance made to someone^a state or situation of a specified, usually undesirable, nature^an act of refraining from bidding during the auction.^a route over or through mountains|2|19/7/2017|1/1/-999999999|2/8/2017
-f||adsf|0|30/7/2017|1/1/-999999999|31/7/2017
-rr||sdfdfsd|0|30/7/2017|1/1/-999999999|31/7/2017
-dfdf||sdf|0|30/7/2017|1/1/-999999999|31/7/2017
-bcvb||cvbcv|0|30/7/2017|1/1/-999999999|31/7/2017
-increase||become or make greater in size, amount, or degree^a rise in the size, amount, or degree of something|0|30/7/2017|1/1/-999999999|31/7/2017
-abed|adv.|In bed; on a bed. `|0|30/7/2017|1/1/-999999999|31/7/2017
+f||adsf|1|30/7/2017|1/1/-999999999|2/8/2017
+rr||sdfdfsd|1|30/7/2017|1/1/-999999999|2/8/2017
+dfdf||sdf|1|30/7/2017|1/1/-999999999|2/8/2017
+bcvb||cvbcv|1|30/7/2017|1/1/-999999999|2/8/2017
+increase||become or make greater in size, amount, or degree^a rise in the size, amount, or degree of something|1|30/7/2017|1/1/-999999999|2/8/2017
+abed|adv.|In bed; on a bed. `|1|30/7/2017|1/1/-999999999|2/8/2017
+ambiguous|adj.|vague; subject to more than one interpretation|0|31/7/2017|1/1/-999999999|1/8/2017
+arbitrate|v.|to settle a dispute by impulse (n: arbitration)|0|31/7/2017|1/1/-999999999|1/8/2017
+assuage|v.|to make less severe; to appease or satisfy|0|31/7/2017|1/1/-999999999|1/8/2017
+attenuate|v.|weaken (adj: attenuated)|0|31/7/2017|1/1/-999999999|1/8/2017
+fafa|fafa|fafa|0|31/7/2017|1/1/-999999999|1/8/2017

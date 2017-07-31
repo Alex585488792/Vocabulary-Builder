@@ -17,9 +17,6 @@ import java.time.LocalDate;
 import java.awt.event.*;
 import java.awt.*;
 
-// TODO limit number of words in TOEFL and GRE that can be added (5)
-// bug: when clicking a specific position between two columns, the checkbox will not change but the table is still
-// being updated
 public class Main extends JFrame implements ActionListener, ChangeListener, TableModelListener {
 	private static final long serialVersionUID = 1L;
 	private static final String delimitField = "|", delimitMean = "^", delimitDate = "/";
@@ -27,7 +24,8 @@ public class Main extends JFrame implements ActionListener, ChangeListener, Tabl
 	private ArrayList<Word> alWord = new ArrayList<Word>(), alRevise = new ArrayList<Word>(), alSAT, alTOEFL, alGRE;
 	private BufferedWriter out;
 	private DefaultTableModel modelWord, modelExtWordList;
-	private File fileWord = new File("words.txt");
+	private File fileWord = new File("resources/words.txt"), fileSAT = new File("resources/sat.txt"), 
+			fileTOEFL = new File("resources/toefl.txt"), fileGRE = new File("resources/gre.txt");
 	private Font fontTitle = new Font("Times new Roman", Font.TRUETYPE_FONT, 48),
 			fontLargeBtn = new Font("Times new Roman", Font.BOLD, 36),
 			fontBody = new Font("Times new Roman", Font.PLAIN, 24),
@@ -75,10 +73,10 @@ public class Main extends JFrame implements ActionListener, ChangeListener, Tabl
 				return false;
 			};
 		};
-		tableWord.getColumnModel().getColumn(0).setMinWidth(60);
+		tableWord.getColumnModel().getColumn(0).setMinWidth(0);
 		tableWord.getColumnModel().getColumn(1).setMinWidth(100);
 		tableWord.getColumnModel().getColumn(2).setMinWidth(60);
-		tableWord.getColumnModel().getColumn(3).setMinWidth(450);
+		tableWord.getColumnModel().getColumn(3).setMinWidth(510);
 		tableWord.getColumnModel().getColumn(4).setMinWidth(60);
 		tableWord.getColumnModel().getColumn(5).setMinWidth(70);
 		tableWord.setPreferredScrollableViewportSize(new Dimension(800, 600));
@@ -430,12 +428,12 @@ public class Main extends JFrame implements ActionListener, ChangeListener, Tabl
 			panelAddWord.repaint();
 			panelAddWord.setLayout(new FlowLayout(FlowLayout.CENTER, 50, 10));
 			JLabel lblSAT = new JLabel("SAT Word List");
-			lblSAT.setFont(new Font("Times new Roman", Font.TRUETYPE_FONT, 48));
+			lblSAT.setFont(fontTitle);
 			lblSAT.setAlignmentX(Component.CENTER_ALIGNMENT);
 			btnAddSAT = new JButton("Add words to list");
 			btnAddSAT.addActionListener(this);
 			btnAddSAT.setBackground(Color.GREEN);
-			alSAT = getSATList(new File("sat.txt"));
+			alSAT = getSATList(fileSAT);
 			modelExtWordList = new DefaultTableModel(0, greColTitle.length);
 			modelExtWordList.setColumnIdentifiers(greColTitle);
 			modelExtWordList.addTableModelListener(this);
@@ -494,12 +492,12 @@ public class Main extends JFrame implements ActionListener, ChangeListener, Tabl
 			panelAddWord.repaint();
 			panelAddWord.setLayout(new FlowLayout(FlowLayout.CENTER, 50, 10));
 			JLabel lblTOEFL = new JLabel("TOEFL Word List");
-			lblTOEFL.setFont(new Font("Times new Roman", Font.TRUETYPE_FONT, 48));
+			lblTOEFL.setFont(fontTitle);
 			lblTOEFL.setAlignmentX(Component.CENTER_ALIGNMENT);
 			btnAddTOEFL = new JButton("Add words to list");
 			btnAddTOEFL.addActionListener(this);
 			btnAddTOEFL.setBackground(Color.GREEN);
-			alTOEFL = getTOEFLList(new File("toefl.txt"));
+			alTOEFL = getTOEFLList(fileTOEFL);
 			modelExtWordList = new DefaultTableModel(0, toeflColTitle.length);
 			modelExtWordList.setColumnIdentifiers(toeflColTitle);
 			modelExtWordList.addTableModelListener(this);
@@ -552,12 +550,12 @@ public class Main extends JFrame implements ActionListener, ChangeListener, Tabl
 			panelAddWord.repaint();
 			panelAddWord.setLayout(new FlowLayout(FlowLayout.CENTER, 50, 10));
 			JLabel lblGRE = new JLabel("GRE Word List");
-			lblGRE.setFont(new Font("Times new Roman", Font.TRUETYPE_FONT, 48));
+			lblGRE.setFont(fontTitle);
 			lblGRE.setAlignmentX(Component.CENTER_ALIGNMENT);
 			btnAddGRE = new JButton("Add words to list");
 			btnAddGRE.addActionListener(this);
 			btnAddGRE.setBackground(Color.GREEN);
-			alGRE = getGREList(new File("gre.txt"));
+			alGRE = getGREList(fileGRE);
 			modelExtWordList = new DefaultTableModel(0, greColTitle.length);
 			modelExtWordList.setColumnIdentifiers(greColTitle);
 			modelExtWordList.addTableModelListener(this);
@@ -792,18 +790,18 @@ public class Main extends JFrame implements ActionListener, ChangeListener, Tabl
 			if (word.getName() == "") {
 				continue;
 			}
-			modelWord.addRow(new Object[] {word.getId() + "|" + "0", word.getName(), word.getPhonetic(), word.getMeaning(0), 
+			modelWord.addRow(new Object[] {word.getId() + delimitField + "0", word.getName(), word.getPhonetic(), word.getMeaning(0), 
 					word.getLevel() >= 10 ? "Mastered" : word.getLevel() + delimitDate + (noOfWordsInLevel.length - 1),
 							word.getDateAdded()});
 			for (int j = 1; j < word.getNumMeaning(); j++) {
-				modelWord.addRow(new Object[] {word.getId() + "|" + j, null, null, word.getMeaning(j), null, null});
+				modelWord.addRow(new Object[] {word.getId() + delimitField + j, null, null, word.getMeaning(j), null, null});
 			}
 		}
 	}
 
 	public void wordArrayToFile(ArrayList<Word> aw) {
 		if (fileWord.delete()) {
-			fileWord = new File("words.txt");
+			fileWord = new File("resources/words.txt");
 		}
 		try {
 			out = new BufferedWriter(new FileWriter(fileWord, true));
@@ -1027,20 +1025,20 @@ public class Main extends JFrame implements ActionListener, ChangeListener, Tabl
 		panelAddWord.setLayout(new BoxLayout(panelAddWord, BoxLayout.PAGE_AXIS));
 		JLabel lblChooseList = new JLabel("Choose a list:");
 		lblChooseList.setAlignmentX(Component.CENTER_ALIGNMENT);
-		lblChooseList.setFont(new Font("Times new Roman", Font.TRUETYPE_FONT, 48));
+		lblChooseList.setFont(fontTitle);
 		btnSAT = new JButton("SAT");
 		btnSAT.setAlignmentX(Component.CENTER_ALIGNMENT);
-		btnSAT.setFont(new Font("Times new Roman", Font.PLAIN, 36));
+		btnSAT.setFont(fontLargeBtn);
 		btnSAT.setBackground(Color.GRAY);
 		btnSAT.addActionListener(this);
 		btnTOEFL = new JButton("TOEFL");
 		btnTOEFL.setAlignmentX(Component.CENTER_ALIGNMENT);
-		btnTOEFL.setFont(new Font("Times new Roman", Font.PLAIN, 36));
+		btnTOEFL.setFont(fontLargeBtn);
 		btnTOEFL.addActionListener(this);
 		btnTOEFL.setBackground(Color.GRAY);
 		btnGRE = new JButton("GRE");
 		btnGRE.setAlignmentX(Component.CENTER_ALIGNMENT);
-		btnGRE.setFont(new Font("Times new Roman", Font.PLAIN, 36));
+		btnGRE.setFont(fontLargeBtn);
 		btnGRE.addActionListener(this);
 		btnGRE.setBackground(Color.GRAY);
 		btnBackDict1 = new JButton("Back");
@@ -1060,8 +1058,6 @@ public class Main extends JFrame implements ActionListener, ChangeListener, Tabl
 	}
 
 	public void tableChanged(TableModelEvent e) {
-//		System.out.println("r = " + e.getFirstRow());
-//		System.out.println(noOfExtWordListWords);
 		if (e.getType() == TableModelEvent.UPDATE
 				&& modelExtWordList.getValueAt(e.getFirstRow(), e.getColumn()).toString().equals("true")) {
 			noOfExtWordListWords++;
@@ -1069,6 +1065,5 @@ public class Main extends JFrame implements ActionListener, ChangeListener, Tabl
 				&& modelExtWordList.getValueAt(e.getFirstRow(), e.getColumn()).toString().equals("false")) {
 			noOfExtWordListWords--;
 		}
-
 	}
 }
