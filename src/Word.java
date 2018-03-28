@@ -3,7 +3,7 @@ import java.util.ArrayList;
 
 public class Word {
 	private String name;
-	private String phonetic;
+	private String pos;
 	private ArrayList<String> meaning;
 	private LocalDate dateAdded, dateRevise, dateComplete;
 	private int lv, noOfMeanings, id, nDontRemember;
@@ -15,7 +15,7 @@ public class Word {
 	}
 	public Word(String n, String ps, String m) {
 		name = n;
-		phonetic = ps;
+		pos = ps;
 		ArrayList<String> mArr = new ArrayList<String>();
 		mArr.add(m);
 		meaning = mArr;
@@ -23,7 +23,7 @@ public class Word {
 	public Word(int i, String n, String p, ArrayList<String> m, int lvl,LocalDate da, LocalDate dc, LocalDate dr) {
 		id = i;
 		name = n;
-		phonetic = p;
+		pos = p;
 		meaning = m;
 		noOfMeanings = m.size();
 		lv = lvl;
@@ -43,11 +43,11 @@ public class Word {
 	public String getName() {
 		return this.name;
 	}
-	public void setPhonetic(String p) {
-		this.phonetic = p;
+	public void setPOS(String p) {
+		this.pos = p;
 	}
-	public String getPhonetic() {
-		return this.phonetic;
+	public String getPOS() {
+		return this.pos;
 	}
 	public void setMeaning(String m, int i) {
 		this.meaning.set(i, m);
@@ -112,6 +112,6 @@ public class Word {
 	public void delete() {
 		name = "";
 		meaning.clear();
-		phonetic = "";
+		pos = "";
 	}
 }

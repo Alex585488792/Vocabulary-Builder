@@ -40,10 +40,10 @@ public class Main extends JFrame implements ActionListener, ChangeListener, Tabl
 	private JTabbedPane tabbedPane;
 	private JTable tableWord, tableExtList;
 	private JTextArea taMeaning, taSearchResults, taAnswer, taStat;
-	private JTextField tfWord, tfPhoneticSym, tfWordSearch;
+	private JTextField tfWord, tfPOSSym, tfWordSearch;
 	private String wordSearch;
 	private String[] toeflColTitle = { "Word", "Meaning", "Add Word" },
-			greColTitle = { "Word", "<html>Phonetic<br>Symbol", "Meaning", "Add Word" };
+			greColTitle = { "Word", "<html>Part of<br>Speech", "Meaning", "Add Word" };
 	private Word wordReviewing;
 
 	public static void main(String[] args) {
@@ -62,7 +62,7 @@ public class Main extends JFrame implements ActionListener, ChangeListener, Tabl
 
 		// Word List panel JComponents
 		// JTable
-		String[] wordColumnTitle = { "", "Word", "<html>Phonetic<br> Symbol", "Meaning", "Progress",
+		String[] wordColumnTitle = { "", "Word", "<html>Part of<br> Speech", "Meaning", "Progress",
 				"<html>Date <br>Added" };
 		modelWord = new DefaultTableModel(0, wordColumnTitle.length);
 		modelWord.setColumnIdentifiers(wordColumnTitle);
@@ -91,7 +91,7 @@ public class Main extends JFrame implements ActionListener, ChangeListener, Tabl
 
 		// Add/Edit/Delete JOptionPane components
 		tfWord = new JTextField(15);
-		tfPhoneticSym = new JTextField(15);
+		tfPOSSym = new JTextField(15);
 		taMeaning = new JTextArea(3, 3);
 		taMeaning.setLineWrap(true);
 		taMeaning.setWrapStyleWord(true);
@@ -249,13 +249,13 @@ public class Main extends JFrame implements ActionListener, ChangeListener, Tabl
 				int wordId = Integer.parseInt(arrId[0]);
 				tfWord.setEnabled(false);
 				tfWord.setText(alWord.get(wordId).getName());
-				tfPhoneticSym.setEnabled(false);
-				tfPhoneticSym.setText(alWord.get(wordId).getPhonetic());
+				tfPOSSym.setEnabled(false);
+				tfPOSSym.setText(alWord.get(wordId).getPOS());
 				taMeaning.setText("");
 				Border border = BorderFactory.createLineBorder(Color.BLACK);
 				taMeaning.setBorder(
 						BorderFactory.createCompoundBorder(border, BorderFactory.createEmptyBorder(10, 10, 10, 10)));
-				Object[] addingWords = { "Word:", tfWord, "Phonetic symbol", tfPhoneticSym, "Meaning:", spTAMeaning };
+				Object[] addingWords = { "Word:", tfWord, "Part of Speech", tfPOSSym, "Meaning:", spTAMeaning };
 				int optionAdd = JOptionPane.showConfirmDialog(null, addingWords, "Add a word",
 						JOptionPane.OK_CANCEL_OPTION);
 				String[] meaning = taMeaning.getText().split("\n");
@@ -272,16 +272,16 @@ public class Main extends JFrame implements ActionListener, ChangeListener, Tabl
 			} else if (optionWM == 1) { // add word
 				tfWord.setEnabled(true);
 				tfWord.setText("");
-				tfPhoneticSym.setText("");
+				tfPOSSym.setText("");
 				taMeaning.setText("");
 				Border border = BorderFactory.createLineBorder(Color.BLACK);
 				taMeaning.setBorder(
 						BorderFactory.createCompoundBorder(border, BorderFactory.createEmptyBorder(10, 10, 10, 10)));
-				Object[] addingWords = { "Word:", tfWord, "Phonetic symbol", tfPhoneticSym, "Meaning:", spTAMeaning };
+				Object[] addingWords = { "Word:", tfWord, "Part of Speech", tfPOSSym, "Meaning:", spTAMeaning };
 				int optionAdd = JOptionPane.showConfirmDialog(null, addingWords, "Add a word",
 						JOptionPane.OK_CANCEL_OPTION);
 				String strWord = tfWord.getText();
-				String phoneticSymbol = tfPhoneticSym.getText();
+				String pos = tfPOSSym.getText();
 				String[] meaning = taMeaning.getText().split("\n");
 				ArrayList<String> meaningArrayList = new ArrayList<String>(
 						Arrays.asList(taMeaning.getText().split("\n")));
@@ -290,7 +290,7 @@ public class Main extends JFrame implements ActionListener, ChangeListener, Tabl
 						JOptionPane.showMessageDialog(null, "You did not input word/meaning!", "Vocabulary Builder",
 								JOptionPane.ERROR_MESSAGE);
 					} else {
-						Word newWord = new Word(id, strWord, phoneticSymbol, meaningArrayList, 0, LocalDate.now(),
+						Word newWord = new Word(id, strWord, pos, meaningArrayList, 0, LocalDate.now(),
 								LocalDate.MIN, LocalDate.now().plusDays(1));
 						id++;
 						alWord.add(newWord);
@@ -309,21 +309,21 @@ public class Main extends JFrame implements ActionListener, ChangeListener, Tabl
 				String oldMeaning = alWord.get(wordId).getMeaning(meaningId);
 				tfWord.setEnabled(true);
 				tfWord.setText(alWord.get(wordId).getName());
-				tfPhoneticSym.setEnabled(true);
+				tfPOSSym.setEnabled(true);
 				if (modelWord.getValueAt(readFileIndex, 1) != null) {
-					tfPhoneticSym.setText(alWord.get(wordId).getPhonetic());
+					tfPOSSym.setText(alWord.get(wordId).getPOS());
 				} else {
-					tfPhoneticSym.setText("");
+					tfPOSSym.setText("");
 				}
 				taMeaning.setText(oldMeaning);
 				Border border = BorderFactory.createLineBorder(Color.BLACK);
 				taMeaning.setBorder(
 						BorderFactory.createCompoundBorder(border, BorderFactory.createEmptyBorder(10, 10, 10, 10)));
-				Object[] addingWords = { "Word:", tfWord, "Phonetic symbol", tfPhoneticSym, "Meaning:", spTAMeaning };
+				Object[] addingWords = { "Word:", tfWord, "Part of Speech", tfPOSSym, "Meaning:", spTAMeaning };
 				int option = JOptionPane.showConfirmDialog(null, addingWords, "Edit a word",
 						JOptionPane.OK_CANCEL_OPTION);
 				String newWord = tfWord.getText();
-				String newPhoneticSymbol = tfPhoneticSym.getText();
+				String newPOS= tfPOSSym.getText();
 				String newMeaning = taMeaning.getText();
 
 				if (option == 0) {
@@ -336,7 +336,7 @@ public class Main extends JFrame implements ActionListener, ChangeListener, Tabl
 								JOptionPane.ERROR_MESSAGE);
 					} else {
 						alWord.get(wordId).setName(newWord);
-						alWord.get(wordId).setPhonetic(newPhoneticSymbol);
+						alWord.get(wordId).setPOS(newPOS);
 						alWord.get(wordId).setMeaning(newMeaning, meaningId);
 						wordArrayToTable(alWord);
 						wordArrayToFile(alWord);
@@ -469,7 +469,7 @@ public class Main extends JFrame implements ActionListener, ChangeListener, Tabl
 			JTableHeader header = tableExtList.getTableHeader();
 			header.setPreferredSize(new Dimension(100, 40));
 			for (int i = 0; i < alSAT.size(); i++) {
-				modelExtWordList.addRow(new Object[] { alSAT.get(i).getName(), alSAT.get(i).getPhonetic(),
+				modelExtWordList.addRow(new Object[] { alSAT.get(i).getName(), alSAT.get(i).getPOS(),
 						alSAT.get(i).getMeaning(0), false });
 			}
 			tableExtList.setPreferredScrollableViewportSize(new Dimension(800, 550));
@@ -591,7 +591,7 @@ public class Main extends JFrame implements ActionListener, ChangeListener, Tabl
 			JTableHeader header = tableExtList.getTableHeader();
 			header.setPreferredSize(new Dimension(100, 40));
 			for (int i = 0; i < alGRE.size(); i++) {
-				modelExtWordList.addRow(new Object[] { alGRE.get(i).getName(), alGRE.get(i).getPhonetic(),
+				modelExtWordList.addRow(new Object[] { alGRE.get(i).getName(), alGRE.get(i).getPOS(),
 						alGRE.get(i).getMeaning(0), false });
 			}
 			tableExtList.setPreferredScrollableViewportSize(new Dimension(800, 550));
@@ -790,7 +790,7 @@ public class Main extends JFrame implements ActionListener, ChangeListener, Tabl
 			if (word.getName() == "") {
 				continue;
 			}
-			modelWord.addRow(new Object[] {word.getId() + delimitField + "0", word.getName(), word.getPhonetic(), word.getMeaning(0), 
+			modelWord.addRow(new Object[] {word.getId() + delimitField + "0", word.getName(), word.getPOS(), word.getMeaning(0), 
 					word.getLevel() >= 10 ? "Mastered" : word.getLevel() + delimitDate + (noOfWordsInLevel.length - 1),
 							word.getDateAdded()});
 			for (int j = 1; j < word.getNumMeaning(); j++) {
@@ -818,7 +818,7 @@ public class Main extends JFrame implements ActionListener, ChangeListener, Tabl
 					}
 				}
 				out.write(word.getName() + delimitField);
-				out.write(word.getPhonetic() + delimitField);
+				out.write(word.getPOS() + delimitField);
 				out.write(meaningToFile + delimitField);
 				out.write(word.getLevel() + delimitField);
 				out.write(word.getDateAdded().getDayOfMonth() + delimitDate + word.getDateAdded().getMonthValue()
